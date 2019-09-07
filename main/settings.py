@@ -11,18 +11,21 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
-import json
+
+from .helpers import get_config
+
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(
     os.path.dirname(os.path.abspath(__file__)))
 
-config_path = os.path.join(
+default_config_path = os.path.join(
     BASE_DIR,
-    'project_conf.json'
+    os.pardir,
+    'pocketbook_meta',
+    'project_conf.json',
 )
-with open(config_path, 'rt') as config_file:
-    config = json.load(config_file)
+config = get_config(default_config_path)
 
 # Quick-start development settings - unsuitable
 # for production
