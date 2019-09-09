@@ -1,5 +1,6 @@
 from django.contrib import admin
 
+from sugar.models import Comment
 from .models import (
     Meal, InsulinKind, InsulinInjection,
     SugarMetering, Record,
@@ -24,6 +25,11 @@ class SugarMeteringInline(admin.TabularInline):
     extra = 1
 
 
+class CommentInline(admin.TabularInline):
+    model = Comment
+    extra = 1
+
+
 @admin.register(Record)
 class RecordAdmin(admin.ModelAdmin):
     """
@@ -34,9 +40,11 @@ class RecordAdmin(admin.ModelAdmin):
         'sugar_level',
         'meal_info',
         'injections_info',
+        'short_comments',
     )
     inlines = (
         SugarMeteringInline,
         MealInline,
         InsulinInjectionInline,
+        CommentInline,
     )

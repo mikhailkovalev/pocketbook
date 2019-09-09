@@ -76,6 +76,17 @@ class Record(models.Model):
             in injections_by_kind.items()
         )
 
+    def short_comments(self):
+        comments = tuple(
+            comment.short()
+            for comment in Comment.objects.filter(
+                record=self.pk)
+        )
+        if not comments:
+            return
+
+        return '; '.join(comments)
+
     class Meta:
         verbose_name = 'Запись дневника сахаров'
         verbose_name_plural = 'Записи дневника сахаров'
@@ -189,7 +200,6 @@ class Comment(Attachment):
                 ending,
             )
         return result
-
 
     def __str__(self):
         return self.content
