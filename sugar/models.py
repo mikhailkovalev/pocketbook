@@ -80,6 +80,11 @@ class Record(models.Model):
         verbose_name = 'Запись дневника сахаров'
         verbose_name_plural = 'Записи дневника сахаров'
 
+        ordering = (
+            'who',
+            '-when',
+        )
+
 
 class Attachment(models.Model):
     """
