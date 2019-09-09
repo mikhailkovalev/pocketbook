@@ -172,3 +172,28 @@ class SugarMetering(Attachment):
     class Meta:
         verbose_name = 'Измерение сахара'
         verbose_name_plural = 'Измерения сахара'
+
+
+class Comment(Attachment):
+    content = models.CharField(
+        max_length=400,
+        verbose_name='Текст комментария',
+    )
+
+    def short(self, max_length=20, ending='<...>'):
+        self.content: str
+        result = self.content
+        if len(self.content) > max_length:
+            result = '{}{}'.format(
+                self.content[:max_length - len(ending)],
+                ending,
+            )
+        return result
+
+
+    def __str__(self):
+        return self.content
+
+    class Meta:
+        verbose_name = 'Комментарий'
+        verbose_name_plural = 'Комментарии'
