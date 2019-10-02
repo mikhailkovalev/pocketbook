@@ -19,11 +19,13 @@ from .helpers import get_config
 BASE_DIR = os.path.dirname(
     os.path.dirname(os.path.abspath(__file__)))
 
-default_config_path = os.path.join(
-    BASE_DIR,
-    os.pardir,
-    'pocketbook_meta',
-    'project_conf.json',
+default_config_path = os.path.abspath(
+    os.path.join(
+        BASE_DIR,
+        os.pardir,
+        'pocketbook_meta',
+        'project_conf.json',
+    )
 )
 config = get_config(default_config_path)
 
