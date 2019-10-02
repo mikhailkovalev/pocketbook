@@ -1,8 +1,11 @@
 from collections import defaultdict
-from pytz import timezone
+from datetime import datetime
 
 from django.db import models
-from django.conf import settings
+
+from core.datetime_helpers import (
+    with_server_timezone,
+)
 
 
 class Record(models.Model):
@@ -22,13 +25,11 @@ class Record(models.Model):
     )
 
     def when_verbose(self):
-        value = self.when
-        if settings.USE_TZ:
-            using_timezone = timezone(
-                settings.TIME_ZONE)
-            value = value.astimezone(
-                using_timezone)
-        return value.strftime(
+        assert isinstance(
+            self.when, datetime)
+        return with_server_timezone(
+            self.when
+        ).strftime(
             '%Y-%m-%d %H:%M')
 
     def sugar_level(self):
