@@ -4,7 +4,9 @@ from operator import itemgetter
 
 from django.conf import settings
 from django.http import HttpResponse
+from django.shortcuts import render
 
+from core.enums import AggregateTypes
 from core.export_helpers import (
     ExtractParams,
     OutAttrBuilder,
@@ -136,4 +138,13 @@ def get_records(request):
     return HttpResponse(
         result.encode('utf-8'),
         content_type='application/json',
+    )
+
+
+def list_view(request):
+    context = dict()
+    return render(
+        request=request,
+        template_name='sugar/list.html',
+        context=context,
     )
