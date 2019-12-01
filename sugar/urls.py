@@ -4,9 +4,12 @@ from . import views
 
 
 urlpatterns = [
-    url(
-        r'^records.json$',
+    url(r'^records.json$',
         views.get_records,
-        name='records',
+        name='records',),
+    url(
+        r'^list.html$',
+        views.list_view,
+        name='list',
     ),
 ]
