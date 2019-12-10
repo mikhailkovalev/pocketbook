@@ -42,9 +42,18 @@ class RecordAdmin(admin.ModelAdmin):
         'injections_info',
         'short_comments',
     )
+    fields = (
+        'when',
+    )
     inlines = (
         SugarMeteringInline,
         MealInline,
         InsulinInjectionInline,
         CommentInline,
     )
+
+    def save_model(self, request, obj, form, change):
+        obj.who = request.user
+        super().save_model(request, obj, form, change)
+
+
