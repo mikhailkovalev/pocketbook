@@ -52,6 +52,12 @@ class RecordAdmin(admin.ModelAdmin):
         CommentInline,
     )
 
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        queryset = queryset.filter(
+            who_id=request.user.id)
+        return queryset
+
     def save_model(self, request, obj, form, change):
         obj.who = request.user
         super().save_model(request, obj, form, change)
