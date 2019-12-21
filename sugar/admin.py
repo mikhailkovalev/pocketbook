@@ -1,9 +1,15 @@
 from django.contrib import admin
 
-from sugar.models import Comment
+from .forms import (
+    CommentForm,
+)
 from .models import (
-    Meal, InsulinKind, InsulinInjection,
-    SugarMetering, Record,
+    Comment,
+    InsulinInjection,
+    InsulinKind,
+    Meal,
+    Record,
+    SugarMetering,
 )
 
 
@@ -28,6 +34,7 @@ class SugarMeteringInline(admin.TabularInline):
 class CommentInline(admin.TabularInline):
     model = Comment
     extra = 1
+    form = CommentForm
 
 
 @admin.register(Record)
