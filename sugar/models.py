@@ -117,6 +117,9 @@ class Attachment(models.Model):
 
 
 class Meal(Attachment):
+    """
+    Приём пищи
+    """
     food_quantity = models.DecimalField(
         verbose_name='Количество употреблённых углеводов (ХЕ)',
         max_digits=3,
@@ -135,6 +138,9 @@ class Meal(Attachment):
 
 
 class InsulinKind(models.Model):
+    """
+    Вид инсулина
+    """
     name = models.CharField(
         verbose_name='Наименование',
         max_length=50,
@@ -149,6 +155,9 @@ class InsulinKind(models.Model):
 
 
 class InsulinInjection(Attachment):
+    """
+    Инъекция инсулина
+    """
     insulin_mark = models.ForeignKey(
         to=InsulinKind,
         verbose_name='Вид инсулина',
@@ -171,6 +180,9 @@ class InsulinInjection(Attachment):
 
 
 class SugarMetering(Attachment):
+    """
+    Уровень сахара в крови (ммоль/л)
+    """
     sugar_level = models.DecimalField(
         verbose_name='Уровень сахара в крови (ммоль/л)',
         max_digits=3,
