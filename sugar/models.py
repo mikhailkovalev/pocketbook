@@ -125,10 +125,20 @@ class Meal(Attachment):
         max_digits=3,
         decimal_places=1,
     )
+    description = models.CharField(
+        verbose_name='Описание',
+        max_length=50,
+        blank=True,
+        default='',
+    )
 
     def __str__(self):
+        prefix = (
+            self.description
+            or self._meta.verbose_name
+        )
         return '{}: {}ХЕ'.format(
-            self.__class__.__name__,
+            prefix,
             self.food_quantity,
         )
 
