@@ -1,5 +1,7 @@
 import gzip
 import json
+import os.path
+
 from datetime import datetime
 
 from django.core.management import (
@@ -9,6 +11,7 @@ from django.core.management import (
 from django.core.management.commands.dumpdata import (
     Command as DumpDataCommand,
 )
+from django.conf import settings
 
 from core.datetime_helpers import (
     with_server_timezone,
@@ -22,26 +25,51 @@ class Command(BaseCommand):
         'данных.'
     )
 
+    def add_arguments(self, parser):
+        super().add_arguments(parser)
+        parser.add_argument(
+            '--file',
+            default=None,
+            dest='filename',
+            help='Имя файла, в который производить сохранение',
+        )
+
     @staticmethod
     def get_data_model_version():
         version_conf_path = 'version_conf.json'
-        version_conf_file = open(version_conf_path, 'r', encoding='utf-8')
+        version_conf_file = open(
+            file=version_conf_path,
+            mode='r',
+            encoding='utf-8',
+        )
         version_conf = json.load(version_conf_file)
+        version_conf_file.close()
         return version_conf['data_model']['version']
 
-    def handle(self, *args, **options):
-        data_model_version = self.get_data_model_version()
+    @classmethod
+    def generate_filename(cls):
+        data_model_version = cls.get_data_model_version()
         today_verbose = with_server_timezone(
             datetime.now(),
         ).strftime(
-            '%Y-%m-%d',
+            '%Y-%m-%d_%H-%M-%S',
         )
-        output_filename = '{prefix}-{date}-v{version}.json.gz'.format(
+        filename = '{prefix}-{date}-v{version}.json.gz'.format(
             prefix='pocketbook',
             date=today_verbose,
             version=data_model_version,
         )
-        output_stream = gzip.open(output_filename, 'wt')
+        return filename
+
+    def handle(self, filename, *args, **options):
+        if filename is None:
+            filename = self.generate_filename()
+
+        output_filepath = os.path.join(
+            settings.MEDIA_ROOT,
+            filename,
+        )
+        output_stream = gzip.open(output_filepath, 'wt')
         dumpdata = DumpDataCommand(stdout=output_stream)
         call_command(dumpdata, format='json')
         output_stream.close()
