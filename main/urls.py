@@ -19,10 +19,19 @@ from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path(
+        'core/',
+        include(
+            # arg=(urlconf_module, app_name)
+            arg=('core.urls', 'core'),
+            namespace='core-app',
+        )
+    ),
+    path(
         'sugar/',
         include(
-         ('sugar.urls', 'sugar'),
-         'sugar-app',
+            # arg=(urlconf_module, app_name)
+            arg=('sugar.urls', 'sugar'),
+            namespace='sugar-app',
         )
     ),
 ]
