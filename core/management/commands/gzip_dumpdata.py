@@ -38,7 +38,13 @@ class Command(BaseCommand):
 
     @staticmethod
     def get_data_model_version():
-        version_conf_path = 'version_conf.json'
+        version_conf_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            os.path.pardir,
+            os.path.pardir,
+            os.path.pardir,
+            'version_conf.json',
+        )
         version_conf_file = open(
             file=version_conf_path,
             mode='r',
