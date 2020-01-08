@@ -4,6 +4,9 @@ import os.path
 
 from datetime import datetime
 
+from django.conf import (
+    settings,
+)
 from django.core.management import (
     BaseCommand,
     call_command,
@@ -11,7 +14,6 @@ from django.core.management import (
 from django.core.management.commands.dumpdata import (
     Command as DumpDataCommand,
 )
-from django.conf import settings
 
 from core.datetime_helpers import (
     with_server_timezone,
@@ -61,14 +63,18 @@ class Command(BaseCommand):
         )
         return filename
 
+    @staticmethod
+    def get_filepath(filename):
+        return os.path.join(
+            settings.MEDIA_ROOT,
+            filename,
+        )
+
     def handle(self, filename, *args, **options):
         if filename is None:
             filename = self.generate_filename()
 
-        output_filepath = os.path.join(
-            settings.MEDIA_ROOT,
-            filename,
-        )
+        output_filepath = self.get_filepath(filename)
         output_stream = gzip.open(output_filepath, 'wt')
         dumpdata = DumpDataCommand(stdout=output_stream)
         call_command(dumpdata, format='json')
