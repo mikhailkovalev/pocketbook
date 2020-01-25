@@ -1,7 +1,13 @@
 from collections import defaultdict
 from datetime import datetime
+from decimal import Decimal
+from typing import (
+    Optional,
+)
 
-from django.db import models
+from django.db import (
+    models,
+)
 
 from core.datetime_helpers import (
     with_server_timezone,
@@ -41,17 +47,29 @@ class Record(models.Model):
             flat=True
         ).first()
 
-    def meal_info(self):
+    def meal_info(self) -> Optional[str]:
         meals = Meal.objects.filter(
             record=self.pk
         )
-        if meals.count() == 0:
+        if not meals.exists():
             return
 
         return '+'.join(map(str, meals.values_list(
             'food_quantity',
             flat=True,
         )))
+
+    def total_meal(self) -> Optional[Decimal]:
+        meals = Meal.objects.filter(
+            record=self.pk
+        )
+        if not meals.exists():
+            return
+
+        return sum(meals.values_list(
+            'food_quantity',
+            flat=1,
+        ))
 
     def injections_info(self):
         injections = InsulinInjection.objects.filter(
