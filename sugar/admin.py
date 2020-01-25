@@ -45,7 +45,7 @@ class RecordAdmin(admin.ModelAdmin):
     list_display = (
         'when_verbose',
         'sugar_level',
-        'meal_info',
+        'total_meal',
         'injections_info',
         'short_comments',
     )
