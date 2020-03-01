@@ -15,7 +15,7 @@ from django.core.management.commands.dumpdata import (
     Command as DumpDataCommand,
 )
 
-from core.datetime_helpers import (
+from core.helpers import (
     with_server_timezone,
 )
 
