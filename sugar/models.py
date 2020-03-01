@@ -9,7 +9,7 @@ from django.db import (
     models,
 )
 
-from core.datetime_helpers import (
+from core.helpers import (
     with_server_timezone,
 )
 
