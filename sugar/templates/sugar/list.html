@@ -1,0 +1,52 @@
+<head>
+    <meta charset="UTF-8">
+    <title>Дневник сахаров</title>
+</head>
+<body>
+    <!--
+    Содержимое
+        - Период
+        - Группировка записей
+        - Таблица записей
+        - Форма редактирования
+    При заходе на страницу:
+        - запросить данные о записях
+        - отрисовать таблицу или сообщение об
+          отсутствии записей
+
+    Судя по всему, нужна форма с параметрами
+    таблицы. У полей могут быть дефолтные
+    значения. По самбиту формы идёт ajax-запрос
+    на сервер.
+    -->
+    <form>
+            <!-- actiton="" -->
+        <label for="period">
+            Период:
+        </label><br>
+<!--        <input id="period"><br>-->
+        <select id="period" name="period">
+            <option value="today">Today</option>
+            <option value="two_days" selected>Since Yesterday</option>
+            <option value="week">Last seven days</option>
+            <option value="month">Last thirty days</option>
+        </select><br>
+
+
+        <label for="group_by">
+            Группировка
+        </label><br>
+        <select id="group_by" name="group_by">
+            <option value="none">None</option>
+            <option value="day">Day</option>
+            <option value="week">Week</option>
+            <option value="month">Month</option>
+        </select><br>
+
+        <input
+                id="submit"
+                type="submit"
+                value="Обновить"
+        >
+    </form>
+</body>
