@@ -1,4 +1,5 @@
 .idea/*
+media/*
 *.pyc
 *.sqlite3
 project_conf.json

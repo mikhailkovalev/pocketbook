@@ -1,6 +1,14 @@
-from django import forms
+from django import (
+    forms,
+)
+from sugar.enums import (
+    DateAggregateEnum,
+    PeriodEnum,
+)
 
-from .models import Comment
+from .models import (
+    Comment,
+)
 
 
 class CommentForm(forms.ModelForm):
@@ -13,3 +21,16 @@ class CommentForm(forms.ModelForm):
         fields = (
             'content',
         )
+
+
+class ListViewForm(forms.Form):
+    period = forms.ChoiceField(
+        label='Период',
+        choices=PeriodEnum.get_choices(),
+        initial=PeriodEnum.WEEK,
+    )
+    groupping = forms.ChoiceField(
+        label='Группировка',
+        choices=DateAggregateEnum.get_choices(),
+        initial=DateAggregateEnum.DAY,
+    )
