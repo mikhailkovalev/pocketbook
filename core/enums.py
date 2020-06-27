@@ -1,9 +1,17 @@
-from enum import IntEnum
+class BaseEnumerate:
+    """
+    Базовый класс перечислений.
 
+    Предоставляет более удобный интерфейс для
+    взаимодействия с джанговскими моделями и
+    формами.
+    """
+    values = {}
 
-class AggregateTypesEnum(IntEnum):
-    NONE = 1
-    DAY = 2
-    WEEK = 3
-    MONTH = 4
-    YEAR = 5
+    @classmethod
+    def get_choices(cls):
+        """
+        Используется для ограничения полей ORM и
+        в качестве источника данных в ChoiceField
+        """
+        return tuple(cls.values.items())
