@@ -24,7 +24,7 @@ default_config_path = os.path.abspath(
         BASE_DIR,
         os.pardir,
         'pocketbook_meta',
-        'project_conf.json',
+        'project_conf.yaml',
     )
 )
 config = get_config(default_config_path)

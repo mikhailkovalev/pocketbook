@@ -4,3 +4,4 @@ static/*
 *.pyc
 *.sqlite3
 project_conf.json
+project_conf.yaml
