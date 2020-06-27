@@ -6,12 +6,15 @@ from django.conf import settings
 
 
 def with_server_timezone(
-        value: datetime) -> datetime:
+        value: datetime,
+) -> datetime:
     if settings.USE_TZ:
         using_timezone = timezone(
-            settings.TIME_ZONE)
+            settings.TIME_ZONE,
+        )
         value = value.astimezone(
-            using_timezone)
+            using_timezone,
+        )
     else:
         value = copy(value)
     return value
