@@ -1,0 +1,40 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>
+        {% block title %}
+        {% endblock %}
+    </title>
+    {% block scripts %}
+    <script
+            type="text/javascript"
+            src="{% static 'core/js/constants.js' %}"
+    ></script>
+    <script
+            type="text/javascript"
+            src="{% static 'core/js/ajax_tools.js' %}"
+    ></script>
+    {% endblock %}
+</head>
+<body
+        {% block body_params %}
+        {% endblock %}
+>
+    <div id="content">
+        {% block content %}
+        {% endblock %}
+    </div>
+    <div id="sidebar">
+        {% block sidebar %}
+            <h2>
+                Sidebar
+            </h2>
+            <p>
+                Some interesting stuff...
+            </p>
+        {% endblock %}
+    </div>
+</body>
+</html>

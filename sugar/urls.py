@@ -12,4 +12,9 @@ urlpatterns = [
         views.list_view,
         name='list',
     ),
+    url(
+        r'^rows.json',
+        views.rows_view,
+        name='rows',
+    ),
 ]

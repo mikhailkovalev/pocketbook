@@ -2,3 +2,5 @@ Django==2.1
 pytz==2018.5
 pyyaml==5.3.1
 pymysql==0.9.3
+numpy=1.14.5
+scipy==1.1.0

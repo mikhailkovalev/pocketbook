@@ -1,52 +1,33 @@
-<head>
-    <meta charset="UTF-8">
-    <title>Дневник сахаров</title>
-</head>
-<body>
-    <!--
-    Содержимое
-        - Период
-        - Группировка записей
-        - Таблица записей
-        - Форма редактирования
-    При заходе на страницу:
-        - запросить данные о записях
-        - отрисовать таблицу или сообщение об
-          отсутствии записей
+{% extends "core/base.html" %}
 
-    Судя по всему, нужна форма с параметрами
-    таблицы. У полей могут быть дефолтные
-    значения. По самбиту формы идёт ajax-запрос
-    на сервер.
-    -->
-    <form>
-            <!-- actiton="" -->
-        <label for="period">
-            Период:
-        </label><br>
-<!--        <input id="period"><br>-->
-        <select id="period" name="period">
-            <option value="today">Today</option>
-            <option value="two_days" selected>Since Yesterday</option>
-            <option value="week">Last seven days</option>
-            <option value="month">Last thirty days</option>
-        </select><br>
+{% load static %}
 
+{% block title %}
+    Дневник сахаров
+{% endblock %}
 
-        <label for="group_by">
-            Группировка
-        </label><br>
-        <select id="group_by" name="group_by">
-            <option value="none">None</option>
-            <option value="day">Day</option>
-            <option value="week">Week</option>
-            <option value="month">Month</option>
-        </select><br>
+{% block scripts %}
+    {{ block.super }}
+    <script
+            type="text/javascript"
+            src="{% static 'sugar/js/table_script.js' %}"
+    ></script>
+{% endblock %}
 
+{% block body_params %}
+    onload="onBodyLoad();"
+{% endblock %}
+
+{% block content %}
+    <form id="list_view_form">
+        {% csrf_token %}
+        {{ list_view_form.as_p }}
         <input
                 id="submit"
-                type="submit"
+                type="button"
                 value="Обновить"
+                onclick="getTableRows('{% url 'sugar-app:rows' %}');"
         >
     </form>
-</body>
+    <div id="list_view_table_div">Nothing to show.</div>
+{% endblock %}
