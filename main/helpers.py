@@ -1,5 +1,5 @@
 import os
-import json
+import yaml
 
 
 def get_config(default_config_path):
@@ -9,5 +9,8 @@ def get_config(default_config_path):
         config_path = default_config_path
 
     with open(config_path, 'rt') as config_file:
-        config = json.load(config_file)
+        config = yaml.load(
+            config_file,
+            Loader=yaml.FullLoader,
+        )
         return config
