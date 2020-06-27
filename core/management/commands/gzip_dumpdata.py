@@ -82,6 +82,14 @@ class Command(BaseCommand):
 
         output_filepath = self.get_filepath(filename)
         output_stream = gzip.open(output_filepath, 'wt')
-        dumpdata = DumpDataCommand(stdout=output_stream)
-        call_command(dumpdata, format='json')
+        dumpdata = DumpDataCommand(
+            stdout=output_stream,
+        )
+        call_command(
+            command_name=dumpdata,
+            format='json',
+            exclude=(
+                'contenttypes',
+            ),
+        )
         output_stream.close()
