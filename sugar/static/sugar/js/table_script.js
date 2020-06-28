@@ -12,16 +12,9 @@ function getTableRows(url) {
         return;
     }
 
-    var listViewForm = document.getElementById(
-        'list_view_form',
+    request.send(
+        getFormData('list_view_form').join('&'),
     );
-
-    var formData = new FormData(listViewForm);
-    var formParams = [];
-    for (let [key, value] of formData.entries()) {
-        formParams.push(`${key}=${value}`)
-    }
-    request.send(formParams.join('&'));
 }
 
 function renderTable(request) {
