@@ -147,6 +147,11 @@ assert isinstance(STATIC_URL, str)
 
 MEDIA_ROOT = static_section.get('MEDIA_ROOT')
 assert isinstance(MEDIA_ROOT, str)
+if not os.path.exists(MEDIA_ROOT):
+    os.makedirs(
+        path=MEDIA_ROOT,
+        mode=0o755,
+    )
 
 MEDIA_URL = static_section.get('MEDIA_URL')
 assert isinstance(MEDIA_URL, str)
