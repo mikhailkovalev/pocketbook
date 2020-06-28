@@ -210,7 +210,7 @@ def rows_view(request, *args, **kwargs):
     period = request.POST.get('period')
     groupping = request.POST.get('groupping')
 
-    page_size = 200  # FIXME: get it from request
+    page_size = 10  # FIXME: get it from request
     page_number = 1  # FIXME: get it from request
 
     records = Record.objects.filter(
@@ -313,47 +313,6 @@ def rows_view(request, *args, **kwargs):
         key_func,
     )
 
-    # for time_label, records_group in groupby(records, itemgetter('time_label')):
-    #     row: Dict[str, Any] = {
-    #         'time_label': get_verbose_time_label(time_label),
-    #         'meal': 0,
-    #         'sugar_level': None,
-    #     }
-    #     response_rows.append(row)
-    #     for record in records_group:
-    #         # region sugar
-    #         # done: по time_label определять datetime-границ этого промежутка
-    #         #       helpers.TIME_LABEL_ENDS
-    #         # done: интегрировать функцию уровня сахара по заданным границам
-    #         #       helpers.TrapezoidalSugarAverager
-    #         # endregion
-    #
-    #         for meal_info in record['meals']:
-    #             row['meal'] += meal_info['food_quantity']
-    #
-    #         for injection_info in record['injections']:
-    #             data_index = insulin_data_indices.get(
-    #                 injection_info['insulin_mark'],
-    #             )
-    #             if data_index is None:
-    #                 mark_id = injection_info['insulin_mark']
-    #                 data_index = 'insulin_{mark}'.format(
-    #                     mark=mark_id,
-    #                 )
-    #                 columns.append(dict(
-    #                     header=injection_info['insulin_mark__name'],
-    #                     data_index=data_index,
-    #                 ))
-    #                 insulin_data_indices[mark_id] = data_index
-    #             if data_index in row:
-    #                 row[data_index] += injection_info['insulin_quantity']
-    #             else:
-    #                 row[data_index] = injection_info['insulin_quantity']
-    #
-    # for row in response_rows:
-    #     row['meal'] = str(row['meal'])
-
-    # todo: упорядочить колонки с инсулином
     response_data = dict(
         rows=response_rows,
         columns=columns,
