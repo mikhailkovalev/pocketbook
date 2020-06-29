@@ -24,6 +24,14 @@
 >
     <div id="content">
         {% block content %}
+            {% if request.user.is_superuser %}
+                <input
+                    id="get_dump"
+                    type="button"
+                    onclick="location.href='{% url 'core:download_json_dump' %}'"
+                    value="Скачать БД"
+                >
+            {% endif %}
         {% endblock %}
     </div>
     <div id="sidebar">

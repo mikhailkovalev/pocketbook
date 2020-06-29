@@ -19,6 +19,7 @@
 {% endblock %}
 
 {% block content %}
+    {{ block.super }}
     <form id="list_view_form">
         {% csrf_token %}
         {{ list_view_form.as_p }}
