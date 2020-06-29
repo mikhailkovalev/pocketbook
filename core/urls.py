@@ -4,7 +4,9 @@ from . import views
 
 
 urlpatterns = [
-    url(r'',
+    url(
+        r'dump',
         views.download_json_dump,
-        name='download_json_dump'),
+        name='download_json_dump',
+    ),
 ]

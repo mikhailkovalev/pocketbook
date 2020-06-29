@@ -22,9 +22,7 @@ from core.management.commands.gzip_dumpdata import (
 
 @user_passes_test(
     test_func=attrgetter('is_superuser'),
-
-    # FIXME: избавиться от хардкода
-    login_url='/admin/login',
+    login_url='/admin/login',  # fixme: хардкод
 )
 def download_json_dump(request):
     cmd = GzipDumpDataCommand()
