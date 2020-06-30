@@ -11,23 +11,47 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
+from typing import (
+    Any,
+    Dict,
+    Iterator,
+    Tuple,
+)
 
-from .helpers import get_config
-
+from .helpers import (
+    get_config,
+)
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(
     os.path.dirname(os.path.abspath(__file__)))
 
-default_config_path = os.path.abspath(
+default_config_folder: str = os.path.abspath(
     os.path.join(
         BASE_DIR,
         os.pardir,
         'pocketbook_meta',
-        'project_conf.yaml',
     )
 )
-config = get_config(default_config_path)
+
+default_config_pure_name: str = 'project_conf'
+default_config_extensions: Tuple[str, ...] = (
+    'json',
+    'yaml',
+)
+
+default_config_paths: Iterator[str] = (
+    os.path.join(
+        default_config_folder,
+        os.path.extsep.join((
+            default_config_pure_name,
+            extension,
+        ))
+    )
+    for extension in default_config_extensions
+)
+
+config: Dict[str, Any] = get_config(default_config_paths)
 
 # Quick-start development settings - unsuitable
 # for production
