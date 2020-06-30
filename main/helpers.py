@@ -1,16 +1,50 @@
+import json
 import os
+from itertools import (
+    chain,
+)
+from typing import (
+    Any,
+    Dict,
+    Iterator,
+    Optional,
+)
+
 import yaml
 
 
-def get_config(default_config_path):
-    config_path = os.getenv('POCKETBOOK_CONF')
-    if (config_path is None
-            or not os.path.exists(config_path)):
-        config_path = default_config_path
+def get_config(config_paths: Iterator[str]) -> Dict[str, Any]:
+    custom_config_path: Optional[str] = os.getenv('POCKETBOOK_CONF')
 
-    with open(config_path, 'rt') as config_file:
-        config = yaml.load(
-            config_file,
-            Loader=yaml.FullLoader,
-        )
-        return config
+    config_paths: Iterator[str] = filter(
+        None,
+        chain(
+            (
+                custom_config_path,
+            ),
+            config_paths,
+        ),
+    )
+
+    config: Optional[Dict[str, Any]] = None
+
+    for path in config_paths:
+        if not os.path.exists(path):
+            continue
+
+        with open(path, 'rt') as config_file:
+            if path.endswith('json'):
+                config = json.load(config_file)
+            elif path.endswith(('yaml', 'yml')):
+                config = yaml.load(
+                    config_file,
+                    Loader=yaml.FullLoader,
+                )
+            else:
+                raise ValueError('Unknown config-file extension!')
+        break
+
+    if config is None:
+        raise ValueError('Config is None!')
+
+    return config
