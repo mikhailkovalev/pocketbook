@@ -173,7 +173,7 @@ MEDIA_ROOT = static_section.get('MEDIA_ROOT')
 assert isinstance(MEDIA_ROOT, str)
 if not os.path.exists(MEDIA_ROOT):
     os.makedirs(
-        path=MEDIA_ROOT,
+        MEDIA_ROOT,
         mode=0o755,
     )
 
