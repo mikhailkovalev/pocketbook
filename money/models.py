@@ -201,7 +201,7 @@ class Transfer(models.Model):
         дебет: расход (увеличивает задолженность)
         кредит: приход (уменьшает задолженность)
     """
-    when = models.DateTimeField(
+    when = models.DateField(
         verbose_name='Дата операции',
     )
     account = models.ForeignKey(
@@ -263,7 +263,7 @@ class TransferDetail(models.Model):
         max_digits=15,
         decimal_places=3,
     )
-    value = models.DecimalField(
+    cost = models.DecimalField(
         verbose_name='Сумма позиции',
         max_digits=15,
         decimal_places=2,
