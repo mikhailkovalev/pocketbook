@@ -258,6 +258,7 @@ class TransferDetail(models.Model):
         to=TransferReason,
         on_delete=models.PROTECT,
     )
+    # fixme: add field name!
     count = models.DecimalField(
         verbose_name='Количество товара/услуг',
         max_digits=15,
