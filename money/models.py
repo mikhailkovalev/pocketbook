@@ -8,6 +8,9 @@ from django.db import (
 from core.helpers import (
     with_server_timezone,
 )
+from core.hierarchical.models import (
+    Hierarchical,
+)
 
 from .enums import (
     AccountActivityEnum,
@@ -24,7 +27,7 @@ from .enums import (
 #    быть равна сумме, указанной в Transfer-е.
 
 
-class Account(models.Model):
+class Account(Hierarchical):
     """
     Счёт, на котором хранятся средства.
 
@@ -40,39 +43,6 @@ class Account(models.Model):
         verbose_name='Наименование',
         max_length=50,
     )
-    parent = models.ForeignKey(
-        to='self',
-        on_delete=models.PROTECT,
-        null=True,
-        related_name='children',
-        verbose_name='Обобщение',
-    )
-
-    root = models.ForeignKey(
-        to='self',
-        on_delete=models.PROTECT,
-        null=True,
-
-    )
-    # Ссылка на корень дерева. Нужна, чтобы иметь
-    # возможность выгружать из таблицы все элементы
-    # дерева одним запросом типа
-    #
-    # Account.objects.filter(root=root)
-    #
-    # вместо того, чтобы на каждом запросе выгружать
-    # по одному поколению (от корня -- запрос на
-    # "детей", потом на "внуков" и т.д.)
-
-    whose = models.ForeignKey(
-        to='auth.User',
-        on_delete=models.CASCADE,
-        related_name='accounts',
-        verbose_name='Владелец',
-    )
-    # Ссылка на пользователя. Нужна, чтобы иметь
-    # возможность выгружать из таблицы все счета
-    # пользователя одним запросом.
 
     class Meta:
         verbose_name = 'Счёт'
@@ -82,24 +52,16 @@ class Account(models.Model):
         return f'{self.name} ({AccountActivityEnum.values[self.activity]})'
 
 
-class AccountHierarchy(models.Model):
+AccountHierarchyBase = Account.get_hierarchy_cls()
+
+
+class AccountHierarchy(AccountHierarchyBase):
     """
     Иерархия счетов
 
     Каждый пользователь может иметь собственную
     иерархию источников и назначений платежей.
     """
-    whose = models.OneToOneField(
-        to='auth.User',
-        on_delete=models.CASCADE,
-        related_name='transfer_reason_hierarchy',
-        verbose_name='Владелец иерархии',
-    )
-    root = models.OneToOneField(
-        to=Account,
-        on_delete=models.CASCADE,
-        verbose_name='Корневой элемент иерархии',
-    )
     activity = models.CharField(
         max_length=8,
         choices=AccountActivityEnum.get_choices(),
@@ -123,6 +85,7 @@ class AccountHierarchy(models.Model):
             )
 
 
+# todo: использовать MPTT?
 class BalanceFixation(models.Model):
     """
     Модель фиксации остатков средств на счетах.
@@ -206,31 +169,26 @@ class Balance(models.Model):
         return result
 
 
-class Provider(models.Model):
+class Provider(Hierarchical):
     """
     Источник/получатель платежа
     """
-    whose = models.ForeignKey(
-        to='auth.User',
-        on_delete=models.CASCADE,
-        related_name='providers',
-    )
     name = models.CharField(
         unique=True,
         max_length=100,
         verbose_name='Наименование',
     )
-    parent = models.ForeignKey(
-        to='self',
-        on_delete=models.PROTECT,
-        related_name='children',
-        null=True,
-        verbose_name='Обобщение',
-    )
 
     class Meta:
         verbose_name = 'Источник/получатель платежа'
         verbose_name_plural = 'Источники/получатели платежей'
+
+
+ProviderHierarchyBase = Provider.get_hierarchy_cls()
+
+
+class ProviderHierarchy(ProviderHierarchyBase):
+    pass
 
 
 class Transfer(models.Model):
