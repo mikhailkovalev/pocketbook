@@ -6,18 +6,12 @@ from core.enums import (
 class AccountActivityEnum(BaseEnumerate):
     ACTIVE = 'active'
     PASSIVE = 'passive'
+    INCOME = 'income'
+    EXPENSE = 'expense'
 
     values = {
         ACTIVE: 'Активный',
         PASSIVE: 'Пассивный',
-    }
-
-
-class TransferDirectionEnum(BaseEnumerate):
-    DEBIT = 'debit'
-    CREDIT = 'credit'
-
-    values = {
-        DEBIT: 'Дебет',
-        CREDIT: 'Кредит',
+        INCOME: 'Приход',
+        EXPENSE: 'Расход',
     }

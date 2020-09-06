@@ -11,8 +11,17 @@ from core.helpers import (
 
 from .enums import (
     AccountActivityEnum,
-    TransferDirectionEnum,
 )
+
+# todo: Проверка целостности данных в базе:
+#  - для каждого счёта, его родитель и его корень и,
+#    привязанный к нему, объект иерархии ссылаются на
+#    одного и того же пользователя
+#  - для каждого счёта его родительские связи
+#    действительно восходят к его корню.
+#  - Сумма произведения количества на цену всех
+#    TransferDetail-ов привязанных к Transfer-у должна
+#    быть равна сумме, указанной в Transfer-е.
 
 
 class Account(models.Model):
@@ -26,21 +35,44 @@ class Account(models.Model):
     задолженности пользователя.
     """
 
+    name = models.CharField(
+        unique=True,
+        verbose_name='Наименование',
+        max_length=50,
+    )
+    parent = models.ForeignKey(
+        to='self',
+        on_delete=models.PROTECT,
+        null=True,
+        related_name='children',
+        verbose_name='Обобщение',
+    )
+
+    root = models.ForeignKey(
+        to='self',
+        on_delete=models.PROTECT,
+        null=True,
+
+    )
+    # Ссылка на корень дерева. Нужна, чтобы иметь
+    # возможность выгружать из таблицы все элементы
+    # дерева одним запросом типа
+    #
+    # Account.objects.filter(root=root)
+    #
+    # вместо того, чтобы на каждом запросе выгружать
+    # по одному поколению (от корня -- запрос на
+    # "детей", потом на "внуков" и т.д.)
+
     whose = models.ForeignKey(
         to='auth.User',
         on_delete=models.CASCADE,
         related_name='accounts',
         verbose_name='Владелец',
     )
-    activity = models.CharField(
-        max_length=8,
-        choices=AccountActivityEnum.get_choices(),
-    )
-    name = models.CharField(
-        unique=True,
-        verbose_name='Наименование',
-        max_length=50,
-    )
+    # Ссылка на пользователя. Нужна, чтобы иметь
+    # возможность выгружать из таблицы все счета
+    # пользователя одним запросом.
 
     class Meta:
         verbose_name = 'Счёт'
@@ -48,6 +80,47 @@ class Account(models.Model):
 
     def __str__(self):
         return f'{self.name} ({AccountActivityEnum.values[self.activity]})'
+
+
+class AccountHierarchy(models.Model):
+    """
+    Иерархия счетов
+
+    Каждый пользователь может иметь собственную
+    иерархию источников и назначений платежей.
+    """
+    whose = models.OneToOneField(
+        to='auth.User',
+        on_delete=models.CASCADE,
+        related_name='transfer_reason_hierarchy',
+        verbose_name='Владелец иерархии',
+    )
+    root = models.OneToOneField(
+        to=Account,
+        on_delete=models.CASCADE,
+        verbose_name='Корневой элемент иерархии',
+    )
+    activity = models.CharField(
+        max_length=8,
+        choices=AccountActivityEnum.get_choices(),
+        verbose_name='Тип счёта',
+    )
+
+    class Meta:
+        verbose_name = 'Иерархия счетов'
+        verbose_name_plural = 'Иерархии счетов'
+        unique_together = (
+            (
+                'whose',
+                'activity',
+            ),
+        )
+
+    def clean(self):
+        if self.root.parent is not None:
+            raise ValidationError(
+                message='Корневой элемент иерархии не должен иметь родительского!',  # noqa
+            )
 
 
 class BalanceFixation(models.Model):
@@ -81,6 +154,7 @@ class BalanceFixation(models.Model):
         return f'{self._meta.verbose_name} от {verbose_when}'
 
     def clean(self):
+        super().clean()
         account_owners_count = len(set(self.balance_set.values_list(
             'account__whose_id',
             flat=True,
@@ -114,7 +188,10 @@ class Balance(models.Model):
 
     class Meta:
         unique_together = (
-            ('account', 'fixation'),
+            (
+                'account',
+                'fixation',
+            ),
         )
         verbose_name = 'Остаток средств'
         verbose_name_plural = 'Остатки средств'
@@ -129,86 +206,43 @@ class Balance(models.Model):
         return result
 
 
-class TransferReason(models.Model):
+class Provider(models.Model):
     """
-    Назначение расхода или источник прихода.
-
-    Имеет иерархическую структуру: запись "Кофе" может
-    ссылаться на запись "Напитки" как на родительскую.
+    Источник/получатель платежа
     """
+    whose = models.ForeignKey(
+        to='auth.User',
+        on_delete=models.CASCADE,
+        related_name='providers',
+    )
     name = models.CharField(
-        verbose_name='Описание',
-        max_length=50,
+        unique=True,
+        max_length=100,
+        verbose_name='Наименование',
     )
     parent = models.ForeignKey(
         to='self',
-        null=True,
         on_delete=models.PROTECT,
         related_name='children',
+        null=True,
         verbose_name='Обобщение',
     )
 
     class Meta:
-        verbose_name = 'Источник/назначение'
-        verbose_name_plural = 'Источники/назначения'
-
-    def __str__(self):
-        return self.name
-
-
-class TransferReasonHierarchy(models.Model):
-    """
-    Иерархия назначений/источников расходов/доходов.
-
-    Каждый пользователь может иметь собственную
-    иерархию источников и назначений платежей.
-    """
-    whose = models.OneToOneField(
-        to='auth.User',
-        on_delete=models.CASCADE,
-        related_name='transfer_reason_hierarchy',
-        verbose_name='Владелец иерархии',
-    )
-    root = models.OneToOneField(
-        to=TransferReason,
-        on_delete=models.CASCADE,
-        verbose_name='Корневой элемент иерархии',
-    )
-
-    class Meta:
-        verbose_name = 'Иерархия назначений расходов/источников доходов'
-        verbose_name_plural = 'Иерархии назначений расходов/источников доходов'
-
-    def clean(self):
-        if self.root.parent is not None:
-            raise ValidationError(
-                message='Корневой элемент иерархии не должен иметь родительского!',  # noqa
-            )
+        verbose_name = 'Источник/получатель платежа'
+        verbose_name_plural = 'Источники/получатели платежей'
 
 
 class Transfer(models.Model):
     """
-    Приход/расход.
+    Перевод средств.
 
     Операция должна происходить между фиксацией,
     указанной в поле `fixation` и той, что ей
     предшествует.
-
-    Активный счёт:
-        дебет: приход (увеличивает капитал)
-        кредит: расход (уменьшает капитал)
-    Пассивный счёт:
-        дебет: расход (увеличивает задолженность)
-        кредит: приход (уменьшает задолженность)
     """
     when = models.DateField(
         verbose_name='Дата операции',
-    )
-    account = models.ForeignKey(
-        to=Account,
-        on_delete=models.PROTECT,
-        related_name='transfers',
-        verbose_name='Счёт списания/зачисления',
     )
     fixation = models.ForeignKey(
         to=BalanceFixation,
@@ -217,19 +251,28 @@ class Transfer(models.Model):
         related_name='transfers',
         verbose_name='Фиксация, в которой учтена эта операция',
     )
-    direction = models.CharField(
-        verbose_name='Дебет/кредит',
-        max_length=7,
-        choices=TransferDirectionEnum.get_choices(),
+    debit_account = models.ForeignKey(
+        to=Account,
+        on_delete=models.PROTECT,
+        related_name='debit_transfers',
+        verbose_name='Счёт зачисления',
+    )
+    credit_account = models.ForeignKey(
+        to=Account,
+        on_delete=models.PROTECT,
+        related_name='credit_transfers',
+        verbose_name='Счёт списания',
     )
     value = models.DecimalField(
         verbose_name='Сумма операции',
         max_digits=15,
         decimal_places=2,
     )
-    provider = models.CharField(
+    provider = models.ForeignKey(
+        to=Provider,
+        on_delete=models.PROTECT,
+        null=True,
         verbose_name='Источник/получатель платежа',
-        max_length=50,
     )
 
     class Meta:
@@ -238,6 +281,11 @@ class Transfer(models.Model):
         ordering = (
             '-when',
         )
+
+    def clean(self):
+        super().clean()
+        # todo: проверить, что дата платежа находится
+        #  в допустимом интервале между фиксациями
 
 
 class TransferDetail(models.Model):
@@ -254,18 +302,17 @@ class TransferDetail(models.Model):
         related_name='details',
         verbose_name='Операция',
     )
-    reason = models.ForeignKey(
-        to=TransferReason,
-        on_delete=models.PROTECT,
+    name = models.CharField(
+        verbose_name='Наименование',
+        max_length=50,
     )
-    # fixme: add field name!
     count = models.DecimalField(
         verbose_name='Количество товара/услуг',
         max_digits=15,
         decimal_places=3,
     )
     cost = models.DecimalField(
-        verbose_name='Сумма позиции',
+        verbose_name='Цена за единицу',
         max_digits=15,
         decimal_places=2,
     )
