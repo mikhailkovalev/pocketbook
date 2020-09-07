@@ -13,9 +13,9 @@ from itertools import (
     starmap,
 )
 from typing import (
+    Iterable,
     Iterator,
     NamedTuple,
-    TextIO,
 )
 
 from django.conf import (
@@ -42,7 +42,7 @@ def with_server_timezone(
 
 
 def iterate_csv_by_namedtuples(
-        csvfile: TextIO,
+        csvfile: Iterable[str],
         delimiter: str = ';',
         quotechar: str = '"',
         typename: str = 'Row',
