@@ -57,19 +57,7 @@ def iterate_csv_by_namedtuples(
         field_names=next(reader),
     )
 
-    # Положим row -- строка данными прочитанными из csv:
-    #   row = next(reader)
-    #
-    # Используя метод _make
-    #   named_row = row_type._make(row)
-    #
-    # избегаем создания промежуточного tuple используя
-    #   named_row = row_type(*row)
-    #
-    # todo: проверить, будет ли это более эффективным
-    #  чем использование itertools.starmap:
-    #    return starmap(row_type, reader)
-    return map(
-        row_type._make,  # noqa
+    return starmap(
+        row_type,
         reader,
     )
