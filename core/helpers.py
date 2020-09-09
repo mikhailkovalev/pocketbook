@@ -40,7 +40,12 @@ def with_server_timezone(
         value = copy(value)
     return value
 
-
+# TODO: Вместо вызова namedtuple внутри функции, лучше
+#  принимать его как аргумент. Далее можно проверять,
+#  что атрибуты переданного типа являются подмножеством
+#  колонок csv-файла. Далее создаём генератор
+#  namedtuple-ов из строк, учитывая требуемый порядок
+#  и возвращаем его
 def iterate_csv_by_namedtuples(
         csvfile: Iterable[str],
         delimiter: str = ';',
