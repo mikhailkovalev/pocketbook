@@ -164,6 +164,10 @@ def rows_view(request, *args, **kwargs):
         for time_label, _ in groupby(records, key_func)
     ]
 
+    # todo: Написать класс-обёртку для columns,
+    #  чтобы при каждом редактировании проверялась
+    #  уникальность data_index-ов (в дебаге) с печатью
+    #  сообщений об ошибках в лог.
     get_sugar_verbose_data(
         records,
         columns,
