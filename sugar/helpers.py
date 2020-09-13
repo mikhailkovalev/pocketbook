@@ -1,4 +1,5 @@
 import calendar
+
 from bisect import (
     bisect_right,
 )
@@ -17,6 +18,7 @@ from itertools import (
     chain,
     groupby,
     islice,
+    product,
     repeat,
 )
 from operator import (
@@ -324,7 +326,7 @@ def get_meal_verbose_data(
 ) -> None:
     columns.append(dict(
         data_index='meal',
-        header='Принято пищи (ХЕ)',
+        header='Съедено (ХЕ)',
     ))
     records_groups_iterator = map(
         itemgetter(1),
@@ -608,20 +610,41 @@ def _get_groupped_sugar_verbose_data(
     end_group_func: Callable[[datetime], datetime]
     end_group_func = TIME_LABEL_ENDS[groupping]
 
-    columns.extend((
+    extending_columns: Tuple[Dict[str, str], ...]
+    extending_columns = (
         dict(
             data_index='sugar_level',
-            header='Средний сахар крови',
+            header='Средний сахар',
+        ),
+        dict(
+            data_index='max_sugar',
+            header='Max',
+        ),
+        dict(
+            data_index='min_sugar',
+            header='Min',
         ),
         dict(
             data_index='meterings_count',
-            header='Сделано измерений',
+            header='Измерений',
         )
-    ))
+    )
 
-    for row in response_rows:
-        row['meterings_count'] = '-'
-        row['sugar_level'] = '-'
+    columns.extend(extending_columns)
+
+    new_cells_iterator: Iterator[Tuple[
+        Dict[str, Any],  # row
+        str,  # data_index
+    ]]
+    new_cells_iterator = product(
+        response_rows,
+        map(
+            itemgetter('data_index'),
+            extending_columns,
+        ),
+    )
+    for row, data_index in new_cells_iterator:
+        row[data_index] = '-'
 
     ext_moments, ext_values = _extend_and_interpolate(
         records,
@@ -679,10 +702,30 @@ def _get_groupped_sugar_verbose_data(
             ext_moments_slice,
         )
         averaged_value = integrated_value / (stop_period - start_period)
-
         row['sugar_level'] = '{:.2f}'.format(averaged_value)
-        row['meterings_count'] = records_group_len
 
+        ext_values_slice_iterator = iter(ext_values_slice)
+        max_value = min_value = next(ext_values_slice_iterator)
+        for value in ext_values_slice_iterator:
+            if value > max_value:
+                max_value = value
+            elif value < min_value:
+                min_value = value
+
+        def make_verbose(value: float) -> str:
+            verbose = '{:.2f}'.format(value)
+            if verbose[-1] == '0':
+                verbose = verbose[:-1]
+
+            return verbose
+
+        verbose_values = map(
+            make_verbose,
+            (min_value, max_value),
+        )
+        row['min_sugar'], row['max_sugar'] = verbose_values
+
+        row['meterings_count'] = records_group_len
         ext_start = ext_stop
 
 
