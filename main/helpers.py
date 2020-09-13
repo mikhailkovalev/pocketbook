@@ -1,6 +1,10 @@
 import json
 import os
 import re
+
+from functools import (
+    lru_cache,
+)
 from itertools import (
     chain,
 )
@@ -16,6 +20,7 @@ from typing import (
 import yaml
 
 
+@lru_cache()
 def _parse_config(path: str) -> Dict[str, Any]:
     with open(path, 'rt', encoding='utf-8') as config_file:
         if path.endswith('json'):
