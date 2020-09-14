@@ -1,21 +1,19 @@
 import csv
 
-from collections import (
-    namedtuple,
-)
 from copy import (
     copy,
 )
 from datetime import (
     datetime,
 )
-from itertools import (
-    starmap,
+from operator import (
+    itemgetter,
 )
 from typing import (
     Iterable,
     Iterator,
     NamedTuple,
+    Type,
 )
 
 from django.conf import (
@@ -40,29 +38,38 @@ def with_server_timezone(
         value = copy(value)
     return value
 
-# TODO: Вместо вызова namedtuple внутри функции, лучше
-#  принимать его как аргумент. Далее можно проверять,
-#  что атрибуты переданного типа являются подмножеством
-#  колонок csv-файла. Далее создаём генератор
-#  namedtuple-ов из строк, учитывая требуемый порядок
-#  и возвращаем его
+
 def iterate_csv_by_namedtuples(
         csvfile: Iterable[str],
+        rowtype: Type[NamedTuple],
         delimiter: str = ';',
         quotechar: str = '"',
-        typename: str = 'Row',
 ) -> Iterator[NamedTuple]:
-    reader = csv.reader(
-        csvfile=csvfile,
+    is_valid = not (
+        hasattr(rowtype, '_fields')
+        and isinstance(rowtype._fields, tuple)  # noqa
+        and all(
+            isinstance(field, str)
+            for field in rowtype._fields  # noqa
+        )
+    )
+    if not is_valid:
+        raise TypeError
+
+    rowtype_fields_set = set(rowtype._fields)  # noqa
+
+    reader = csv.DictReader(
+        csvfile,
         delimiter=delimiter,
         quotechar=quotechar,
     )
-    row_type = namedtuple(
-        typename=typename,
-        field_names=next(reader),
-    )
 
-    return starmap(
-        row_type,
+    reader_fields_set = set(reader._fieldnames)  # noqa
+
+    if not reader_fields_set.issuperset(rowtype_fields_set):
+        raise ValueError
+
+    return map(
+        itemgetter(*rowtype._fields),  # noqa
         reader,
     )
