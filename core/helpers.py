@@ -77,7 +77,7 @@ def iterate_csv_by_namedtuples(
         rowtype: Type[NamedTuple],
         delimiter: str = ';',
         quotechar: str = '"',
-) -> Iterator[NamedTuple]:
+) -> Iterator:
     is_valid = not (
         hasattr(rowtype, '_fields')
         and isinstance(rowtype._fields, tuple)  # noqa
