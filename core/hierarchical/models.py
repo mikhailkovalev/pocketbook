@@ -30,6 +30,10 @@ from django.db.models.base import (
     ModelBase,
 )
 
+from .managers import (
+    HierarchicalQuerySet,
+)
+
 
 class HierarchicalMeta(ModelBase):
     ALLOWED_CHARACTERS = ''.join((
@@ -143,6 +147,8 @@ class HierarchicalMeta(ModelBase):
 
 
 class Hierarchical(models.Model, metaclass=HierarchicalMeta):
+    objects = HierarchicalQuerySet.as_manager()
+
     id = models.TextField(
         primary_key=True,
     )
