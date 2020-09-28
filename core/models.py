@@ -17,6 +17,7 @@ from typing import (
     Callable,
     Dict,
     List,
+    Type,
 )
 
 from django.conf import (
@@ -41,7 +42,7 @@ class HierarchicalMeta(ModelBase):
     @classmethod
     @lru_cache(maxsize=None)
     def get_ids_by_char_cache(mcs) -> Dict[str, int]:
-        return dict(map(
+        return dict(map(  # noqa
             reversed,
             enumerate(mcs.ALLOWED_CHARACTERS),
         ))
@@ -61,7 +62,7 @@ class HierarchicalMeta(ModelBase):
     @classmethod
     @lru_cache(maxsize=None)
     def get_zero_predicate(mcs) -> Callable[[str], bool]:
-        return partial(eq, mcs.ALLOWED_CHARACTERS[0])
+        return partial(eq, mcs.ALLOWED_CHARACTERS[0])  # noqa
 
     @classmethod
     def _make_next_id(mcs, chars: str):
@@ -98,7 +99,7 @@ class HierarchicalMeta(ModelBase):
 
     def get_max_str_id(cls) -> str:
         full_id: str = next(
-            iter(cls.objects.aggregate(
+            iter(cls.objects.aggregate(  # noqa
                 models.Max('id'),
             ).values()),
             None,
@@ -110,6 +111,35 @@ class HierarchicalMeta(ModelBase):
             sep=cls.DELIMITER,
             maxsplit=1,
         )[0]
+
+    @lru_cache(maxsize=None)
+    def get_hierarchy_cls(cls, ownable: bool = True) -> Type[models.Model]:
+        attrs = {
+            # Fields
+            'root': models.OneToOneField(
+                to=cls,
+                on_delete=models.CASCADE,
+                verbose_name='Корневой элемент иерархии',
+            ),
+
+            # Meta
+            '__module__': cls.__module__,
+            'Meta': type('Meta', (), dict(abstract=True)),
+        }
+
+        if ownable:
+            attrs['whose'] = models.ForeignKey(
+                to='auth.User',
+                on_delete=models.CASCADE,
+                related_name='+',
+                verbose_name='Владелец иерархии',
+            )
+
+        return type(  # noqa
+            f'{cls.__name__}HierarchyBase',
+            (models.Model,),
+            attrs,
+        )
 
 
 class Hierarchical(models.Model, metaclass=HierarchicalMeta):
@@ -140,12 +170,20 @@ class Hierarchical(models.Model, metaclass=HierarchicalMeta):
             using=None,
             update_fields=None,
     ):
-        own_id_chunk = self.get_next_id()
+        if not self.id:
+            own_id_chunk = self.get_next_id()
+        else:
+            own_id_chunk = self.id.split(
+                sep=self.__class__.DELIMITER,
+                maxsplit=1,
+            )[0]
+
         if self.parent is None:
             self.id = own_id_chunk
         else:
             self.id = self.__class__.DELIMITER.join((
                 own_id_chunk,
-                self.parent.id,
+                self.parent.id,  # noqa
             ))
+
         super().save(force_insert, force_update, using, update_fields)
