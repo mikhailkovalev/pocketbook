@@ -69,8 +69,8 @@ class HierarchicalQuerySet(TreeQuerySet):
 
     def _get_doomed_dict(self) -> Dict[Optional[PkType], Set[PkType]]:
         items: Iterable[Tuple[PkType, Optional[PkType]]] = self.values_list(
-            'id',
-            'parent_id',
+            'pk',
+            self._get_parent_attname(),
         )
 
         keys: Iterator[Optional[PkType]] = chain(
@@ -88,6 +88,11 @@ class HierarchicalQuerySet(TreeQuerySet):
             doomed[parent_id].add(item_id)
 
         return doomed
+
+    def _get_parent_attname(self) -> str:
+        return self.model._meta.get_field(  # noqa
+            self.model._mptt_meta.parent_attr,  # noqa
+        )
 
     def delete(self) -> Tuple[int, Dict[str, int]]:
         result: Dict[str, int] = self._delete_by_layers()
