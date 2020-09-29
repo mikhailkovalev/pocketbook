@@ -82,6 +82,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'mptt',
+
     'core',
     'core.hierarchical',
     'sugar',
