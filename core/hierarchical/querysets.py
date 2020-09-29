@@ -1,6 +1,3 @@
-from collections import (
-    defaultdict,
-)
 from itertools import (
     chain,
 )
@@ -32,7 +29,7 @@ class HierarchicalQuerySet(TreeQuerySet):
 
     @atomic
     def _delete_by_layers(self) -> Dict[str, int]:
-        result: Dict[str, int] = defaultdict(int)
+        result: Dict[str, int] = {}
 
         doomed: Dict[Optional[PkType], Set[PkType]]
         doomed = self._get_doomed_dict()
@@ -58,7 +55,10 @@ class HierarchicalQuerySet(TreeQuerySet):
             ).delete()
 
             for app_label, deleted_count in sub_result.items():
-                result[app_label] += deleted_count
+                try:
+                    result[app_label] += deleted_count
+                except KeyError:
+                    result[app_label] = deleted_count
 
         if next(filter(None, doomed), None):
             raise ValueError(

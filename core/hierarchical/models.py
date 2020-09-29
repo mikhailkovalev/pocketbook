@@ -14,13 +14,13 @@ from mptt.models import (
     TreeForeignKey,
 )
 
-from .querysets import (
-    HierarchicalQuerySet,
+from .managers import (
+    HierarchicalManager,
 )
 
 
 class Hierarchical(MPTTModel):
-    objects = HierarchicalQuerySet.as_manager()
+    objects = HierarchicalManager()
 
     parent = TreeForeignKey(
         to='self',
