@@ -23,7 +23,7 @@ class Aim(Hierarchical):
         verbose_name='Дата начала',
         null=True,
     )
-    finish_day = models.DateField(
+    deadline = models.DateField(
         verbose_name='Дата завершения',
         null=True,
     )
@@ -38,7 +38,10 @@ class Aim(Hierarchical):
 
     @property
     def elapsed_time(self) -> Decimal:
-        return Decimal()
+        return sum(self.actions.all().values_list(
+            'elapsed_time',
+            flat=True,
+        ))
 
 
 AimHierarchyBase = Aim.get_hierarchy_cls()
@@ -52,7 +55,7 @@ class Action(models.Model):
     aim = models.ForeignKey(
         to=Aim,
         on_delete=models.CASCADE,
-        related_name='steps',
+        related_name='actions',
         verbose_name='Цель',
     )
     when = models.DateField(
@@ -73,3 +76,13 @@ class Action(models.Model):
     class Meta:
         verbose_name = 'Действие'
         verbose_name_plural = 'Действия'
+
+    def short_description(self, max_length=20, ending='<...>'):
+        self.description: str
+        result = self.description
+        if len(self.description) > max_length:
+            result = ''.join((
+                self.description[:max_length - len(ending)],
+                ending,
+            ))
+        return result
