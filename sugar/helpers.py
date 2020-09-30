@@ -442,7 +442,7 @@ def _get_single_sugar_verbose_data(
 
 
 def _extend_stored_meterings(
-        stored_time_moments_iterator: Iterator[float],  # fixme: rename to `timestamps`
+        stored_time_moments_iterator: Iterator[int],  # fixme: rename to `timestamps`
         stored_values_iterator: Iterator[float],
         first_moment: datetime,
         last_moment: datetime,
@@ -474,11 +474,11 @@ def _extend_stored_meterings(
     if before_first is not None and after_last is not None:
         stored_time_moments_iterator = chain(
             (
-                before_first['localized_when'].timestamp(),
+                round(before_first['localized_when'].timestamp()),
             ),
             stored_time_moments_iterator,
             (
-                after_last['localized_when'].timestamp(),
+                round(after_last['localized_when'].timestamp()),
             ),
         )
         stored_values_iterator = chain(
@@ -494,7 +494,7 @@ def _extend_stored_meterings(
     elif before_first is not None:
         stored_time_moments_iterator = chain(
             (
-                before_first['localized_when'].timestamp(),
+                round(before_first['localized_when'].timestamp()),
             ),
             stored_time_moments_iterator,
         )
@@ -509,7 +509,7 @@ def _extend_stored_meterings(
         stored_time_moments_iterator = chain(
             stored_time_moments_iterator,
             (
-                after_last['localized_when'].timestamp(),
+                round(after_last['localized_when'].timestamp()),
             ),
         )
         stored_values_iterator = chain(
@@ -527,22 +527,25 @@ def _extend_stored_meterings(
 
 def _interpolate_meterings(
         records: List[Dict[str, Any]],  # на самом деле не list, а values-QuerySet
-        stored_moments: Tuple[float, ...],
+        stored_moments: Tuple[int, ...],
         stored_values: Tuple[float, ...],
         key_func: Callable[[Dict[str, Any]], Any],
         end_group_func: Callable[[datetime], datetime],
 
 ) -> Tuple[
-    List[float],
+    List[int],
     Collection[float],
 ]:
-
-    ext_moments = sorted(set(chain(  # fixme: set<float> -- такое себе
+    ext_moments: List[int]
+    ext_moments = sorted(set(chain(
         stored_moments,
         chain.from_iterable((
-            (
-                moment.timestamp(),
-                end_group_func(moment).timestamp(),
+            map(
+                round,
+                (
+                    moment.timestamp(),
+                    end_group_func(moment).timestamp(),
+                ),
             )
             for moment in (
                 key_func(record)
@@ -567,8 +570,9 @@ def _extend_and_interpolate(
         key_func: Callable[[Dict[str, Any]], Any],
         end_group_func: Callable[[datetime], datetime],
 ) -> Tuple[List[float], Collection[float]]:
+    stored_time_moments_iterator: Iterator[int]
     stored_time_moments_iterator = (
-        record['localized_when'].timestamp()
+        round(record['localized_when'].timestamp())
         for record in reversed(records)
         if record['sugar_meterings']
     )
@@ -585,7 +589,7 @@ def _extend_and_interpolate(
         records[0]['when'],
     )
 
-    stored_moments: Tuple[float, ...]
+    stored_moments: Tuple[int, ...]
     stored_moments = tuple(stored_time_moments_iterator)
 
     stored_values: Tuple[float, ...]
@@ -680,8 +684,8 @@ def _get_groupped_sugar_verbose_data(
         except StopIteration:
             continue
 
-        start_period = time_label.timestamp()
-        stop_period = end_group_func(time_label).timestamp()
+        start_period = round(time_label.timestamp())
+        stop_period = round(end_group_func(time_label).timestamp())
 
         while (ext_start < ext_arrays_length
                 and ext_moments[ext_start] < start_period):
