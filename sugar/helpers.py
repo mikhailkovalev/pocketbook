@@ -537,7 +537,7 @@ def _interpolate_meterings(
     Collection[float],
 ]:
 
-    ext_moments = sorted(set(chain(
+    ext_moments = sorted(set(chain(  # fixme: set<float> -- такое себе
         stored_moments,
         chain.from_iterable((
             (
@@ -549,7 +549,7 @@ def _interpolate_meterings(
                 for record in records
             )
         )),
-    )))
+    )))[:-1]
 
     ext_values = numpy.interp(
         ext_moments,
@@ -690,9 +690,12 @@ def _get_groupped_sugar_verbose_data(
         ext_stop = ext_start + records_group_len
 
         assert ext_moments[ext_stop] <= stop_period
-        while (ext_start < ext_arrays_length
+        while (ext_stop < ext_arrays_length
                 and ext_moments[ext_stop] < stop_period):
             ext_stop += 1
+
+        if ext_stop >= ext_arrays_length:
+            stop_period = ext_moments[-1]
 
         ext_moments_slice = ext_moments[ext_start:ext_stop+1]
         ext_values_slice = ext_values[ext_start:ext_stop+1]
