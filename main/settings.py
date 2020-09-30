@@ -87,6 +87,7 @@ INSTALLED_APPS = [
     'core',
     'core.hierarchical',
     'sugar',
+    'aims',
 ]
 
 MIDDLEWARE = [
