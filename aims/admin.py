@@ -22,6 +22,8 @@ class AimAdmin(admin.ModelAdmin):
         'estimated_time',
     )
 
+    # todo: assign user
+
 
 @admin.register(Action)
 class ActionAdmin(admin.ModelAdmin):
@@ -37,3 +39,5 @@ class ActionAdmin(admin.ModelAdmin):
         'elapsed_time',
         'description',
     )
+
+    # todo: assign user

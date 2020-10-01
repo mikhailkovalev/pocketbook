@@ -19,10 +19,14 @@ class Aim(Hierarchical):
     created = models.DateField(
         verbose_name='Момент создания записи',
     )
+
+    # todo: add verbose version
+    # todo: add actual start day (from actions)
     start_day = models.DateField(
         verbose_name='Дата начала',
         null=True,
     )
+    # todo: add verbose version
     deadline = models.DateField(
         verbose_name='Дата завершения',
         null=True,
@@ -32,16 +36,21 @@ class Aim(Hierarchical):
         null=True,
     )
 
+    # todo: reasons (model + inlines in admin)
+
     class Meta:
         verbose_name = 'Цель'
         verbose_name_plural = 'Цели'
 
     @property
     def elapsed_time(self) -> Decimal:
+        # todo: count descendants!
         return sum(self.actions.all().values_list(
             'elapsed_time',
             flat=True,
         ))
+
+    # todo: __str__
 
 
 AimHierarchyBase = Aim.get_hierarchy_cls()
@@ -58,6 +67,7 @@ class Action(models.Model):
         related_name='actions',
         verbose_name='Цель',
     )
+    # todo: add verbose version
     when = models.DateField(
         verbose_name='Дата действия',
     )
@@ -76,6 +86,8 @@ class Action(models.Model):
     class Meta:
         verbose_name = 'Действие'
         verbose_name_plural = 'Действия'
+
+    # todo: __str__
 
     def short_description(self, max_length=20, ending='<...>'):
         self.description: str
