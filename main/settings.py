@@ -84,6 +84,7 @@ INSTALLED_APPS = [
 
     'mptt',
 
+    # todo: define plugins in config-file
     'core',
     'core.hierarchical',
     'sugar',

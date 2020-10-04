@@ -92,7 +92,7 @@ class HierarchicalQuerySet(TreeQuerySet):
     def _get_parent_attname(self) -> str:
         return self.model._meta.get_field(  # noqa
             self.model._mptt_meta.parent_attr,  # noqa
-        )
+        ).attname
 
     def delete(self) -> Tuple[int, Dict[str, int]]:
         result: Dict[str, int] = self._delete_by_layers()

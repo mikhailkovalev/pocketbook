@@ -26,6 +26,7 @@ urlpatterns = [
         views.show_version,
         name='version',
     ),
+    # todo: let plugins attach urlpatterns itself
     path(
         'core/',
         include(

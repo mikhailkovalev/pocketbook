@@ -27,6 +27,7 @@ class Hierarchical(MPTTModel):
         on_delete=models.PROTECT,
         related_name='children',
         null=True,
+        blank=True,
         verbose_name='Обобщение',
     )
 

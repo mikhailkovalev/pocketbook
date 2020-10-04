@@ -1,8 +1,22 @@
-from copy import copy
-from datetime import datetime
-from pytz import timezone
+from copy import (
+    copy,
+)
+from datetime import (
+    date,
+    datetime,
+    time,
+)
+from typing import (
+    Type,
+    Union,
+)
 
-from django.conf import settings
+from django.conf import (
+    settings,
+)
+from pytz import (
+    timezone,
+)
 
 
 def with_server_timezone(
@@ -18,3 +32,30 @@ def with_server_timezone(
     else:
         value = copy(value)
     return value
+
+
+class AbleToVerbolizeDateTimeAttrsMixin:
+    def _get_verbose_datetime(
+            self,
+            attr: str,
+            fmt: str,
+            src_type: Union[Type[date], Type[time]],
+    ) -> str:
+        assert hasattr(self, attr)
+        date_value = getattr(self, attr)
+        assert isinstance(date_value, src_type)
+        return date_value.strftime(fmt)
+
+    def get_verbose_date(
+            self,
+            attr: str,
+            fmt: str = '%Y-%m-%d',
+    ) -> str:
+        return self._get_verbose_datetime(attr, fmt, date)
+
+    def get_verbose_datetime(
+            self,
+            attr: str,
+            fmt: str = '%Y-%m-%d %H:%M',
+    ):
+        return self._get_verbose_datetime(attr, fmt, datetime)
