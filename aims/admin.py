@@ -77,6 +77,18 @@ class ActionAdmin(admin.ModelAdmin):
         'description',
     )
 
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+
+        own_ids = Aim.get_own_ids(
+            owner_id=request.user.id,
+        )
+        queryset = queryset.filter(
+            aim__in=own_ids,
+        )
+
+        return queryset
+
     def get_field_queryset(self, db, db_field, request):
         queryset = super().get_field_queryset(db, db_field, request)
 
