@@ -16,6 +16,7 @@ class AimAdmin(MPTTModelAdmin):
     list_display = (
         'name',
         'verbose_created',
+        'verbose_deadline',
         'estimated_time',
         'elapsed_time',
     )
@@ -23,6 +24,7 @@ class AimAdmin(MPTTModelAdmin):
         'parent',
         'name',
         'created',
+        'deadline',
         'estimated_time',
     )
 
@@ -75,6 +77,9 @@ class ActionAdmin(admin.ModelAdmin):
         'aim',
         'elapsed_time',
         'description',
+    )
+    ordering = (
+        '-when',
     )
 
     def get_queryset(self, request):

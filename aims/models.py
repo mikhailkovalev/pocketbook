@@ -68,20 +68,23 @@ class Aim(Hierarchical, AbleToVerbolizeDateTimeAttrsMixin):
         self.name: str
         return self.name
 
-    def verbose_start_day(self):
+    def verbose_start_day(self) -> Optional[str]:
         return self.get_verbose_date(
             attr='start_day',
         )
+    verbose_start_day.short_description = 'start day'
 
-    def verbose_deadline(self):
+    def verbose_deadline(self) -> Optional[str]:
         return self.get_verbose_date(
             attr='deadline',
         )
+    verbose_deadline.short_description = 'deadline'
 
-    def verbose_created(self):
+    def verbose_created(self) -> Optional[str]:
         return self.get_verbose_date(
             attr='created',
         )
+    verbose_created.short_description = 'created'
 
     @classmethod
     def get_own_ids(cls, owner_id):
@@ -150,6 +153,7 @@ class Action(models.Model, AbleToVerbolizeDateTimeAttrsMixin):
         return self.get_verbose_date(
             attr='when',
         )
+    verbose_when.short_description = 'when'
 
     def __str__(self):
         return ': '.join((

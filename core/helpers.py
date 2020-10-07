@@ -8,7 +8,7 @@ from datetime import (
 )
 from typing import (
     Type,
-    Union,
+    Union, Optional,
 )
 
 from django.conf import (
@@ -40,9 +40,11 @@ class AbleToVerbolizeDateTimeAttrsMixin:
             attr: str,
             fmt: str,
             src_type: Union[Type[date], Type[time]],
-    ) -> str:
+    ) -> Optional[str]:
         assert hasattr(self, attr)
         date_value = getattr(self, attr)
+        if date_value is None:
+            return None
         assert isinstance(date_value, src_type)
         return date_value.strftime(fmt)
 
@@ -50,12 +52,12 @@ class AbleToVerbolizeDateTimeAttrsMixin:
             self,
             attr: str,
             fmt: str = '%Y-%m-%d',
-    ) -> str:
+    ) -> Optional[str]:
         return self._get_verbose_datetime(attr, fmt, date)
 
     def get_verbose_datetime(
             self,
             attr: str,
             fmt: str = '%Y-%m-%d %H:%M',
-    ):
+    ) -> Optional[str]:
         return self._get_verbose_datetime(attr, fmt, datetime)
