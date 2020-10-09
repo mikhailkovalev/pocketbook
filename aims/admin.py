@@ -23,9 +23,11 @@ class AimAdmin(MPTTModelAdmin):
     fields = (
         'parent',
         'name',
+        'done',
         'created',
         'deadline',
         'estimated_time',
+        'description',
     )
 
     @staticmethod

@@ -37,9 +37,19 @@ class Aim(Hierarchical, AbleToVerbolizeDateTimeAttrsMixin):
     deadline = models.DateField(
         verbose_name='Дата завершения',
         null=True,
+        blank=True,
     )
     estimated_time = models.IntegerField(
         verbose_name='Оценка времени (часов)',
+        null=True,
+        blank=True,
+    )
+    done = models.BooleanField(
+        verbose_name='Выполнено',
+        default=False,
+    )
+    description = models.TextField(
+        verbose_name='Описание',
         null=True,
         blank=True,
     )
