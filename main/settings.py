@@ -11,6 +11,10 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
+from itertools import (
+    product,
+    starmap,
+)
 from typing import (
     Any,
     Dict,
@@ -26,29 +30,39 @@ from .helpers import (
 BASE_DIR = os.path.dirname(
     os.path.dirname(os.path.abspath(__file__)))
 
-default_config_folder: str = os.path.abspath(
-    os.path.join(
-        BASE_DIR,
-        os.pardir,
-        'pocketbook_meta',
-    )
+default_config_folders: Tuple[str, ...] = (
+    os.path.abspath(
+        os.path.join(
+            BASE_DIR,
+            os.pardir,
+            'pocketbook_meta',
+        )
+    ),
+    BASE_DIR,
 )
 
-default_config_pure_name: str = 'project_conf'
+default_config_pure_names: Tuple[str, ...] = (
+    'project_conf',
+)
 default_config_extensions: Tuple[str, ...] = (
     'json',
     'yaml',
 )
 
-default_config_paths: Iterator[str] = (
-    os.path.join(
-        default_config_folder,
-        os.path.extsep.join((
-            default_config_pure_name,
-            extension,
-        ))
-    )
-    for extension in default_config_extensions
+default_config_names: Iterator[str] = map(
+    os.path.extsep.join,
+    product(
+        default_config_pure_names,
+        default_config_extensions,
+    ),
+)
+
+default_config_paths: Iterator[str] = starmap(
+    os.path.join,
+    product(
+        default_config_folders,
+        default_config_names,
+    ),
 )
 
 config: Dict[str, Any] = get_config(default_config_paths)
