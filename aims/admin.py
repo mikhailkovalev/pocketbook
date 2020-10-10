@@ -15,6 +15,7 @@ from .models import (
 class AimAdmin(MPTTModelAdmin):
     list_display = (
         'name',
+        'done',
         'verbose_created',
         'verbose_deadline',
         'estimated_time',
@@ -105,6 +106,7 @@ class ActionAdmin(admin.ModelAdmin):
             )
             queryset = db_field.related_model._default_manager.filter(
                 pk__in=own_aim_ids,
+                done=False,
             )
 
         return queryset
