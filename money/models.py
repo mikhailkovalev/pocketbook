@@ -5,6 +5,11 @@ from django.db import (
     models,
 )
 
+from mptt.models import (
+    MPTTModel,
+    TreeOneToOneField,
+)
+
 from core.helpers import (
     with_server_timezone,
 )
@@ -85,17 +90,16 @@ class AccountHierarchy(AccountHierarchyBase):
             )
 
 
-# todo: использовать MPTT?
-class BalanceFixation(models.Model):
+class BalanceFixation(MPTTModel):
     """
     Модель фиксации остатков средств на счетах.
     """
     when = models.DateTimeField(
         verbose_name='Момент фиксации',
     )
-    prev_fixation = models.OneToOneField(
+    prev_fixation = TreeOneToOneField(
         to='self',
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         null=True,
         related_name='next_fixation',
         verbose_name='Предыдущая фиксация',
