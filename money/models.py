@@ -192,7 +192,9 @@ ProviderHierarchyBase = Provider.get_hierarchy_cls()
 
 
 class ProviderHierarchy(ProviderHierarchyBase):
-    pass
+    class Meta:
+        verbose_name = 'Иерархия провайдеров'
+        verbose_name_plural = 'Иерархии провайдеров'
 
 
 class Transfer(models.Model):

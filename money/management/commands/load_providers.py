@@ -1,6 +1,8 @@
 from typing import (
+    Dict,
     Iterator,
     NamedTuple,
+    Optional,
 )
 
 from django.contrib.auth.models import (
@@ -13,6 +15,11 @@ from django.core.management import (
 
 from core.helpers import (
     iterate_csv_by_namedtuples,
+)
+
+from money.models import (
+    Provider,
+    ProviderHierarchy,
 )
 
 
@@ -47,3 +54,30 @@ class Command(BaseCommand):
             delimiter=';',
         )
 
+        providers_by_name: Dict[str, Provider] = {}
+
+        for item in items:
+
+            parent: Optional[Provider] = None
+            if item.parent:
+                try:
+                    parent = providers_by_name[item.parent]
+                except KeyError:
+                    raise ValueError(
+                        'You have to define provider "{parent}" before using it with account "{name}"'.format(  # noqa
+                            parent=item.parent,
+                            name=item.name,
+                        ),
+                    )
+
+            provider = Provider.objects.create(
+                name=item.name,
+                parent=parent,
+            )
+            providers_by_name[item.name] = provider
+
+            if parent is None:
+                ProviderHierarchy.objects.create(
+                    whose_id=user_id,
+                    root=provider,
+                )

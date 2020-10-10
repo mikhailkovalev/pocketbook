@@ -8,6 +8,9 @@ from datetime import (
     datetime,
     time,
 )
+from itertools import (
+    starmap,
+)
 from operator import (
     itemgetter,
 )
@@ -17,6 +20,7 @@ from typing import (
     NamedTuple,
     Optional,
     Type,
+    TypeVar,
     Union,
 )
 
@@ -72,13 +76,16 @@ class AbleToVerbolizeDateTimeAttrsMixin:
         return self._get_verbose_datetime(attr, fmt, datetime)
 
 
+RowType = TypeVar('RowType', bound=NamedTuple)
+
+
 def iterate_csv_by_namedtuples(
         csvfile: Iterable[str],
-        rowtype: Type[NamedTuple],
+        rowtype: Type[RowType],
         delimiter: str = ';',
         quotechar: str = '"',
-) -> Iterator:
-    is_valid = not (
+) -> Iterator[RowType]:
+    is_valid = (
         hasattr(rowtype, '_fields')
         and isinstance(rowtype._fields, tuple)  # noqa
         and all(
@@ -97,13 +104,15 @@ def iterate_csv_by_namedtuples(
         quotechar=quotechar,
     )
 
-    reader_fields_set = set(reader._fieldnames)  # noqa
+    reader_fields_set = set(reader.fieldnames)  # noqa
 
     if not reader_fields_set.issuperset(rowtype_fields_set):
         raise ValueError
 
-    return map(
-        # fixme: разве должны возвращаться обычные tuple?
-        itemgetter(*rowtype._fields),  # noqa
-        reader,
+    return starmap(
+        rowtype,
+        map(
+            itemgetter(*rowtype._fields),  # noqa
+            reader,
+        ),
     )
