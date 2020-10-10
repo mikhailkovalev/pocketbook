@@ -11,6 +11,19 @@ from .models import (
 )
 
 
+class ActionInline(admin.TabularInline):
+    model = Action
+    extra = 1
+    fields = (
+        'when',
+        'elapsed_time',
+        'description',
+    )
+    ordering = (
+        'when',
+    )
+
+
 @admin.register(Aim)
 class AimAdmin(MPTTModelAdmin):
     list_display = (
@@ -29,6 +42,9 @@ class AimAdmin(MPTTModelAdmin):
         'deadline',
         'estimated_time',
         'description',
+    )
+    inlines = (
+        ActionInline,
     )
 
     @staticmethod
