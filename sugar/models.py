@@ -325,7 +325,7 @@ class InsulinSyringe(AbstractMedication):
             cls_name=self._meta.verbose_name,
             insulin_mark=str(self.insulin_mark),
             volume=str(self.volume),
-            opening=self.verbose_opening,
+            opening=self.verbose_opening(),
         )
 
     def __repr__(self):

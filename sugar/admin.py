@@ -1,15 +1,6 @@
 from django.contrib import (
     admin,
 )
-from django.db import (
-    models,
-)
-from django.db.models import (
-    ExpressionWrapper,
-)
-from django.db.models.functions import (
-    Cast,
-)
 
 from .forms import (
     CommentForm,
@@ -22,7 +13,8 @@ from .models import (
     InsulinSyringe,
     Meal,
     Record,
-    SugarMetering, TestStripPack,
+    SugarMetering,
+    TestStripPack,
 )
 
 admin.site.register(InsulinKind)
@@ -36,6 +28,27 @@ class MealInline(admin.TabularInline):
 class InsulinInjectionInline(admin.TabularInline):
     model = InsulinInjection
     extra = 1
+
+    def get_field_queryset(self, db, db_field, request):
+        queryset = super().get_field_queryset(db, db_field, request)
+
+        if db_field is self.model._meta.get_field('insulin_mark'):
+            if queryset is None:
+                queryset = db_field.related_model.objects.all()
+
+            mark_ids = InsulinSyringe.objects.filter(
+                expiry_actual__isnull=True,
+            ).values_list(
+                'insulin_mark',
+                flat=True,
+            )
+            filtered_queryset = queryset.filter(
+                pk__in=mark_ids,
+            )
+            if filtered_queryset.exists():
+                queryset = filtered_queryset
+
+        return queryset
 
 
 class SugarMeteringInline(admin.TabularInline):
@@ -178,4 +191,3 @@ class TestStripPackAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         obj.whose = request.user
         super().save_model(request, obj, form, change)
-
