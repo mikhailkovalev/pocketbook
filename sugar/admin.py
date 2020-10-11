@@ -1,4 +1,15 @@
-from django.contrib import admin
+from django.contrib import (
+    admin,
+)
+from django.db import (
+    models,
+)
+from django.db.models import (
+    ExpressionWrapper,
+)
+from django.db.models.functions import (
+    Cast,
+)
 
 from .forms import (
     CommentForm,
@@ -7,11 +18,12 @@ from .models import (
     Comment,
     InsulinInjection,
     InsulinKind,
+    InsulinOrdering,
+    InsulinSyringe,
     Meal,
     Record,
-    SugarMetering,
+    SugarMetering, TestStripPack,
 )
-
 
 admin.site.register(InsulinKind)
 
@@ -69,4 +81,101 @@ class RecordAdmin(admin.ModelAdmin):
         obj.who = request.user
         super().save_model(request, obj, form, change)
 
+
+@admin.register(InsulinSyringe)
+class InsulinSyringeAdmin(admin.ModelAdmin):
+    list_display = (
+        'verbose_insulin_mark',
+        'volume',
+        'is_expired',
+        'verbose_opening',
+        'verbose_expiry_plan',
+        'verbose_expiry_actual',
+    )
+    fields = (
+        'insulin_mark',
+        'volume',
+        'opening',
+        'expiry_plan',
+        'expiry_actual',
+    )
+    ordering = (
+        '-opening',
+    )
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+
+        queryset = queryset.filter(
+            whose_id=request.user.id,
+        )
+
+        return queryset
+
+    def save_model(self, request, obj, form, change):
+        obj.whose = request.user
+        super().save_model(request, obj, form, change)
+
+
+@admin.register(InsulinOrdering)
+class InsulinOrderingAdmin(admin.ModelAdmin):
+    list_display = (
+        'verbose_insulin_mark',
+        'verbose_when',
+        'next_ordering_plan_date',
+    )
+    fields = (
+        'insulin_mark',
+        'when',
+        'next_ordering_plan_date',
+    )
+    ordering = (
+        '-when',
+    )
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+
+        queryset = queryset.filter(
+            whose_id=request.user.id,
+        )
+
+        return queryset
+
+    def save_model(self, request, obj, form, change):
+        obj.whose = request.user
+        super().save_model(request, obj, form, change)
+
+
+@admin.register(TestStripPack)
+class TestStripPackAdmin(admin.ModelAdmin):
+    list_display = (
+        '__str__',
+        'volume',
+        'is_expired',
+        'verbose_expiry_plan',
+        'verbose_expiry_actual',
+    )
+    fields = (
+        'volume',
+        'opening',
+        'expiry_plan',
+        'expiry_actual',
+    )
+    ordering = (
+        '-opening',
+    )
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+
+        queryset = queryset.filter(
+            whose_id=request.user.id,
+        )
+
+        return queryset
+
+    def save_model(self, request, obj, form, change):
+        obj.whose = request.user
+        super().save_model(request, obj, form, change)
 

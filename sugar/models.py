@@ -10,6 +10,7 @@ from django.db import (
 )
 
 from core.helpers import (
+    AbleToVerbolizeDateTimeAttrsMixin,
     with_server_timezone,
 )
 
@@ -248,3 +249,179 @@ class Comment(Attachment):
     class Meta:
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
+
+
+class AbstractMedication(models.Model, AbleToVerbolizeDateTimeAttrsMixin):
+    class Meta:
+        abstract = True
+
+    whose = models.ForeignKey(
+        to='auth.User',
+        on_delete=models.CASCADE,
+        related_name='+',
+        verbose_name='Владелец',
+    )
+
+    volume = models.PositiveSmallIntegerField(
+        verbose_name='Номинальный объём',
+    )
+
+    opening = models.DateField(
+        verbose_name='Дата начала пользования',
+    )
+
+    expiry_plan = models.DateField(
+        verbose_name='Плановая дата окончания пользования',
+        blank=True,
+        null=True,
+    )
+
+    expiry_actual = models.DateField(
+        verbose_name='Фактическая дата окончания пользования',
+        blank=True,
+        null=True,
+    )
+
+    def is_expired(self) -> bool:
+        return self.expiry_actual is not None
+    is_expired.boolean = True
+
+    def verbose_opening(self) -> str:
+        return self.get_verbose_date(
+            attr='opening',
+        )
+    verbose_opening.short_description = opening.verbose_name
+
+    def verbose_expiry_plan(self) -> Optional[str]:
+        return self.get_verbose_date(
+            attr='expiry_plan',
+        )
+    verbose_expiry_plan.short_description = expiry_plan.verbose_name
+
+    def verbose_expiry_actual(self) -> Optional[str]:
+        return self.get_verbose_date(
+            attr='expiry_actual',
+        )
+    verbose_expiry_actual.short_description = expiry_actual.verbose_name
+
+
+class InsulinSyringe(AbstractMedication):
+    class Meta:
+        verbose_name = 'Шприц'
+        verbose_name_plural = 'Шприцы'
+
+    insulin_mark = models.ForeignKey(
+        to=InsulinKind,
+        verbose_name='Вид инсулина',
+        on_delete=models.PROTECT,
+    )
+
+    def verbose_insulin_mark(self) -> str:
+        return self.insulin_mark.name
+    verbose_insulin_mark.short_description = insulin_mark.verbose_name
+
+    def __str__(self):
+        return '{cls_name} "{insulin_mark}" ({volume} ед.) от {opening}'.format(  # noqa
+            cls_name=self._meta.verbose_name,
+            insulin_mark=str(self.insulin_mark),
+            volume=str(self.volume),
+            opening=self.verbose_opening,
+        )
+
+    def __repr__(self):
+        return (
+            '<{cls_name}(\n'
+            '    insulin_mark={insulin_mark},\n'
+            '    volume={volume},\n'
+            '    opening={opening},\n'
+            '    expiry_plan={expiry_plan},\n'
+            '    expiry_actual={expiry_actual},\n'
+            ')>'
+        ).format(
+            cls_name=self.__class__.__name__,
+            insulin_mark=repr(self.insulin_mark),
+            volume=repr(self.volume),
+            opening=repr(self.opening),
+            expiry_plan=repr(self.expiry_plan),
+            expiry_actual=repr(self.expiry_actual),
+        )
+
+
+class InsulinOrdering(models.Model, AbleToVerbolizeDateTimeAttrsMixin):
+    class Meta:
+        verbose_name = 'Выписка инсулина'
+        verbose_name_plural = 'Выписки инсулина'
+
+    whose = models.ForeignKey(
+        to='auth.User',
+        on_delete=models.CASCADE,
+        related_name='+',
+        verbose_name='Владелец',
+    )
+
+    insulin_mark = models.ForeignKey(
+        to=InsulinKind,
+        on_delete=models.PROTECT,
+        related_name='+',
+        verbose_name=InsulinKind._meta.verbose_name
+    )
+
+    when = models.DateField(
+        verbose_name='Дата выписки',
+    )
+    next_ordering_plan_date = models.DateField(
+        verbose_name='Планируемая дата следующей выписки',
+        blank=True,
+        null=True,
+    )
+
+    def verbose_when(self) -> Optional[str]:
+        return self.get_verbose_date(
+            attr='when',
+        )
+    verbose_when.short_description = when.verbose_name
+
+    def verbose_insulin_mark(self) -> str:
+        return self.insulin_mark.name
+    verbose_insulin_mark.short_description = insulin_mark.verbose_name
+
+    def __repr__(self):
+        return '<{cls_name}(when={when})>'.format(
+            cls_name=self.__class__.__name__,
+            when=repr(self.when),
+        )
+
+    def __str__(self):
+        return '{cls_name} от {when}'.format(
+            cls_name=self._meta.verbose_name,
+            when=self.verbose_when(),
+        )
+
+
+class TestStripPack(AbstractMedication):
+    class Meta:
+        verbose_name = 'Пачка тест-полосок'
+        verbose_name_plural = 'Пачки тест-полосок'
+
+    def __repr__(self):
+        return (
+            '<{cls_name}(\n'
+            '    volume={volume},\n'
+            '    opening={opening},\n'
+            '    expiry_plan={expiry_plan},\n'
+            '    expiry_actual={expiry_actual},\n'
+            ')>'
+        ).format(
+            cls_name=self.__class__.__name__,
+            insulin_mark=repr(self.insulin_mark),
+            volume=repr(self.volume),
+            opening=repr(self.opening),
+            expiry_plan=repr(self.expiry_plan),
+            expiry_actual=repr(self.expiry_actual),
+        )
+
+    def __str__(self):
+        return '{cls_name} от {when}'.format(
+            cls_name=self._meta.verbose_name,
+            when=self.verbose_opening(),
+        )
