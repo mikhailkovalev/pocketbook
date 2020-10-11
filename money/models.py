@@ -54,7 +54,22 @@ class Account(Hierarchical):
         verbose_name_plural = 'Счета'
 
     def __str__(self):
-        return f'{self.name} ({AccountActivityEnum.values[self.activity]})'
+        return self.name
+
+    @property
+    def activity(self):
+        return self.get_ancestors(
+            include_self=True,
+        ).filter(
+            parent__isnull=True,
+        ).values_list(
+            'accounthierarchy__activity',
+            flat=True,
+        ).get()
+
+    @property
+    def verbose_activity(self):
+        return AccountActivityEnum.values[self.activity]
 
 
 AccountHierarchyBase = Account.get_hierarchy_cls()
@@ -82,6 +97,20 @@ class AccountHierarchy(AccountHierarchyBase):
                 'activity',
             ),
         )
+
+    @property
+    def verbose_activity(self) -> str:
+        return AccountActivityEnum.values[self.activity]
+
+    def __repr__(self):
+        return '<{model_name}(activity=\'{activity}\', whose={user})>'.format(
+            model_name=self.__class__.__name__,
+            activity=self.activity,
+            user=repr(self.whose),
+        )
+
+    def __str__(self):
+        return self.verbose_activity
 
     def clean(self):
         if self.root.parent is not None:
