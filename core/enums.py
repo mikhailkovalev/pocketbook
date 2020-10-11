@@ -1,3 +1,9 @@
+from itertools import (
+    chain,
+)
+from typing import Iterable, Tuple
+
+
 class BaseEnumerate:
     """
     Базовый класс перечислений.
@@ -8,10 +14,20 @@ class BaseEnumerate:
     """
     values = {}
 
+    empty_label: str = '---------'
+
     @classmethod
-    def get_choices(cls):
+    def get_choices(cls, with_empty: bool = False):
         """
         Используется для ограничения полей ORM и
         в качестве источника данных в ChoiceField
         """
-        return tuple(cls.values.items())
+        pairs: Iterable[Tuple] = cls.values.items()
+        if with_empty:
+            pairs = chain(
+                (
+                    (None, cls.empty_label),
+                ),
+                pairs,
+            )
+        return tuple(pairs)
