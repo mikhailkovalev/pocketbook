@@ -2,6 +2,10 @@ from django.contrib import (
     admin,
 )
 
+from core.admin import (
+    ownable,
+)
+
 from .forms import (
     CommentForm,
 )
@@ -63,6 +67,7 @@ class CommentInline(admin.TabularInline):
 
 
 @admin.register(Record)
+@ownable('who')
 class RecordAdmin(admin.ModelAdmin):
     """
     Класс админки для записи дневника.
@@ -84,18 +89,9 @@ class RecordAdmin(admin.ModelAdmin):
         CommentInline,
     )
 
-    def get_queryset(self, request):
-        queryset = super().get_queryset(request)
-        queryset = queryset.filter(
-            who_id=request.user.id)
-        return queryset
-
-    def save_model(self, request, obj, form, change):
-        obj.who = request.user
-        super().save_model(request, obj, form, change)
-
 
 @admin.register(InsulinSyringe)
+@ownable('whose')
 class InsulinSyringeAdmin(admin.ModelAdmin):
     list_display = (
         'verbose_insulin_mark',
@@ -116,21 +112,9 @@ class InsulinSyringeAdmin(admin.ModelAdmin):
         '-opening',
     )
 
-    def get_queryset(self, request):
-        queryset = super().get_queryset(request)
-
-        queryset = queryset.filter(
-            whose_id=request.user.id,
-        )
-
-        return queryset
-
-    def save_model(self, request, obj, form, change):
-        obj.whose = request.user
-        super().save_model(request, obj, form, change)
-
 
 @admin.register(InsulinOrdering)
+@ownable('whose')
 class InsulinOrderingAdmin(admin.ModelAdmin):
     list_display = (
         'verbose_insulin_mark',
@@ -146,21 +130,9 @@ class InsulinOrderingAdmin(admin.ModelAdmin):
         '-when',
     )
 
-    def get_queryset(self, request):
-        queryset = super().get_queryset(request)
-
-        queryset = queryset.filter(
-            whose_id=request.user.id,
-        )
-
-        return queryset
-
-    def save_model(self, request, obj, form, change):
-        obj.whose = request.user
-        super().save_model(request, obj, form, change)
-
 
 @admin.register(TestStripPack)
+@ownable('whose')
 class TestStripPackAdmin(admin.ModelAdmin):
     list_display = (
         '__str__',
@@ -178,16 +150,3 @@ class TestStripPackAdmin(admin.ModelAdmin):
     ordering = (
         '-opening',
     )
-
-    def get_queryset(self, request):
-        queryset = super().get_queryset(request)
-
-        queryset = queryset.filter(
-            whose_id=request.user.id,
-        )
-
-        return queryset
-
-    def save_model(self, request, obj, form, change):
-        obj.whose = request.user
-        super().save_model(request, obj, form, change)
