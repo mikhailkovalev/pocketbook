@@ -96,24 +96,6 @@ class Aim(Hierarchical, AbleToVerbolizeDateTimeAttrsMixin):
         )
     verbose_created.short_description = 'created'
 
-    @classmethod
-    def get_own_ids(cls, owner_id):
-        hierarchy_model = cls.aimhierarchy.related.related_model
-        root_ids = hierarchy_model.objects.filter(
-            whose_id=owner_id,
-        ).values_list(
-            'root_id',
-            flat=True,
-        )
-        return cls.objects.filter(
-            pk__in=root_ids,
-        ).get_descendants(
-            include_self=True,
-        ).values_list(
-            'pk',
-            flat=True,
-        )
-
 
 AimHierarchyBase = Aim.get_hierarchy_cls()
 

@@ -1,13 +1,15 @@
 from django.contrib import (
     admin,
 )
-from mptt.admin import (
-    MPTTModelAdmin,
+
+from core.hierarchical.admin import (
+    HierarchicalAdmin,
 )
 
 from .models import (
     Action,
     Aim,
+    AimHierarchy,
 )
 
 
@@ -25,7 +27,9 @@ class ActionInline(admin.TabularInline):
 
 
 @admin.register(Aim)
-class AimAdmin(MPTTModelAdmin):
+class AimAdmin(HierarchicalAdmin):
+    hierarchy_cls = AimHierarchy
+
     list_display = (
         'name',
         'done',
@@ -47,41 +51,6 @@ class AimAdmin(MPTTModelAdmin):
         ActionInline,
     )
 
-    @staticmethod
-    def _own_records_filter(request, queryset):
-        own_ids = queryset.model.get_own_ids(
-            owner_id=request.user.id,
-        )
-        queryset = queryset.filter(
-            pk__in=own_ids,
-        )
-        return queryset
-
-    def get_queryset(self, request):
-        queryset = super().get_queryset(request)
-        return self._own_records_filter(request, queryset)
-
-    def get_field_queryset(self, db, db_field, request):
-        queryset = super().get_field_queryset(db, db_field, request)
-
-        if db_field is self.model._meta.get_field('parent'):
-            queryset = self._own_records_filter(request, queryset)
-
-        return queryset
-
-    def save_model(self, request, obj, form, change):
-        create_hierarchy = not obj.id
-
-        result = super().save_model(request, obj, form, change)
-
-        if create_hierarchy:
-            self.model.aimhierarchy.related.related_model.objects.create(
-                root=obj,
-                whose=request.user,
-            )
-
-        return result
-
 
 @admin.register(Action)
 class ActionAdmin(admin.ModelAdmin):
@@ -101,10 +70,16 @@ class ActionAdmin(admin.ModelAdmin):
         '-when',
     )
 
+    @staticmethod
+    def get_own_aims_ids(owner_id):
+        return AimHierarchy.get_own_items_ids(
+            owner_id=owner_id,
+        )
+
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
 
-        own_ids = Aim.get_own_ids(
+        own_ids = self.get_own_aims_ids(
             owner_id=request.user.id,
         )
         queryset = queryset.filter(
@@ -117,7 +92,7 @@ class ActionAdmin(admin.ModelAdmin):
         queryset = super().get_field_queryset(db, db_field, request)
 
         if db_field is self.model._meta.get_field('aim'):
-            own_aim_ids = db_field.related_model.get_own_ids(
+            own_aim_ids = self.get_own_aims_ids(
                 owner_id=request.user.id,
             )
             queryset = db_field.related_model._default_manager.filter(
