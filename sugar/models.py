@@ -368,11 +368,11 @@ class InsulinSyringe(AbstractMedication):
     verbose_insulin_mark.short_description = insulin_mark.verbose_name
 
     def get_used_amount(self) -> int:
-        return next(self.injections.aggregate(
-            NumericSum(
+        return next(iter(self.injections.aggregate(
+            used_amount=NumericSum(
                 'insulin_quantity',
             ),
-        ).values())
+        ).values()))
     get_used_amount.short_description = 'Использовано'
 
     def __str__(self):
