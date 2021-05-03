@@ -11,6 +11,7 @@ from django.db import (
 
 from core.helpers import (
     AbleToVerbolizeDateTimeAttrsMixin,
+    NumericSum,
     with_server_timezone,
 )
 
@@ -81,7 +82,7 @@ class Record(models.Model):
 
         injections_by_kind = defaultdict(list)
         injections = injections.values_list(
-            'insulin_mark__name',
+            'insulin_syringe__insulin_mark__name',
             'insulin_quantity',
         )
         for kind, quantity in injections:
@@ -187,19 +188,23 @@ class InsulinInjection(Attachment):
     """
     Инъекция инсулина
     """
-    insulin_mark = models.ForeignKey(
-        to=InsulinKind,
-        verbose_name='Вид инсулина',
+    insulin_syringe = models.ForeignKey(
+        to='InsulinSyringe',
         on_delete=models.PROTECT,
+        verbose_name='Шприц',
+        related_name='injections',
     )
     insulin_quantity = models.PositiveSmallIntegerField(
         verbose_name='Количество введённого инсулина',
         null=True,
     )
 
+    def get_insulin_mark(self):
+        return self.insulin_syringe.insulin_mark
+
     def __str__(self):
         return 'Инъекция({}): {}ед.'.format(
-            self.insulin_mark.name,
+            self.get_insulin_mark().name,
             self.insulin_quantity,
         )
 
@@ -212,6 +217,12 @@ class SugarMetering(Attachment):
     """
     Уровень сахара в крови (ммоль/л)
     """
+    pack = models.ForeignKey(
+        to='TestStripPack',
+        on_delete=models.PROTECT,
+        verbose_name='Пачка',
+        related_name='meterings',
+    )
     sugar_level = models.DecimalField(
         verbose_name='Уровень сахара в крови (ммоль/л)',
         max_digits=3,
@@ -252,6 +263,8 @@ class Comment(Attachment):
 
 
 class AbstractMedication(models.Model, AbleToVerbolizeDateTimeAttrsMixin):
+    USAGES_MANAGER_NAME: Optional[str] = None
+    
     class Meta:
         abstract = True
 
@@ -281,10 +294,42 @@ class AbstractMedication(models.Model, AbleToVerbolizeDateTimeAttrsMixin):
         blank=True,
         null=True,
     )
+    
+    @classmethod
+    def get_actual_items(cls, on_date: Optional[datetime]) -> models.QuerySet:
+        if on_date is None:
+            on_date = datetime.now()
 
+        result = cls.objects.filter(
+            models.Q(
+                expiry_actual__isnull=True,
+            ) | models.Q(
+                expiry_actual__gte=on_date,
+            ),
+            opening__lte=on_date,
+        )
+
+        return result
+    
     def is_expired(self) -> bool:
         return self.expiry_actual is not None
     is_expired.boolean = True
+    is_expired.short_description = 'Израсходовано'
+
+    def get_last_usage_moment(self) -> Optional[datetime]:
+        usages_manager_name = self.__class__.USAGES_MANAGER_NAME
+
+        assert usages_manager_name is not None
+
+        return getattr(self, usages_manager_name).order_by(
+            '-record__when',
+        ).values_list(
+            'record_when',
+            flat=True,
+        ).first()
+
+    def get_used_amount(self) -> int:
+        raise NotImplementedError
 
     def verbose_opening(self) -> str:
         return self.get_verbose_date(
@@ -306,6 +351,8 @@ class AbstractMedication(models.Model, AbleToVerbolizeDateTimeAttrsMixin):
 
 
 class InsulinSyringe(AbstractMedication):
+    USAGES_MANAGER_NAME = 'injections'
+
     class Meta:
         verbose_name = 'Шприц'
         verbose_name_plural = 'Шприцы'
@@ -319,6 +366,14 @@ class InsulinSyringe(AbstractMedication):
     def verbose_insulin_mark(self) -> str:
         return self.insulin_mark.name
     verbose_insulin_mark.short_description = insulin_mark.verbose_name
+
+    def get_used_amount(self) -> int:
+        return next(self.injections.aggregate(
+            NumericSum(
+                'insulin_quantity',
+            ),
+        ).values())
+    get_used_amount.short_description = 'Использовано'
 
     def __str__(self):
         return '{cls_name} "{insulin_mark}" ({volume} ед.) от {opening}'.format(  # noqa
@@ -402,6 +457,10 @@ class TestStripPack(AbstractMedication):
     class Meta:
         verbose_name = 'Пачка тест-полосок'
         verbose_name_plural = 'Пачки тест-полосок'
+
+    def get_used_amount(self) -> int:
+        return self.meterings.count()
+    get_used_amount.short_description = 'Использовано'
 
     def __repr__(self):
         return (

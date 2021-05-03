@@ -132,8 +132,8 @@ def rows_view(request, *args, **kwargs):
             fk_name='record',
             filter_=slice_params.slice_filter,
             export_values=(
-                'insulin_mark',
-                'insulin_mark__name',
+                'insulin_syringe__insulin_mark',
+                'insulin_syringe__insulin_mark__name',
                 'insulin_quantity',
             ),
         ),

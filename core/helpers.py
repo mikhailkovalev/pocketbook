@@ -7,13 +7,21 @@ from datetime import (
     time,
 )
 from typing import (
+    Optional,
     Type,
-    Union, Optional,
+    Union,
 )
 
 from django.conf import (
     settings,
 )
+from django.db.models import (
+    Sum,
+)
+from django.db.models.functions import (
+    Coalesce,
+)
+
 from pytz import (
     timezone,
 )
@@ -61,3 +69,7 @@ class AbleToVerbolizeDateTimeAttrsMixin:
             fmt: str = '%Y-%m-%d %H:%M',
     ) -> Optional[str]:
         return self._get_verbose_datetime(attr, fmt, datetime)
+
+
+def NumericSum(*args, **kwargs):
+    return Coalesce(Sum(*args, **kwargs), 0)

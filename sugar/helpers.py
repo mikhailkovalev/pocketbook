@@ -370,16 +370,16 @@ def get_injections_verbose_data(
     for row, records_group in zipped:
         for record in records_group:
             for injection_info in record['injections']:  # fixme: pass attachment_set_name
-                mark_id = injection_info['insulin_mark']
+                mark_id = injection_info['insulin_syringe__insulin_mark']
                 data_index = data_indices.get(
                     mark_id,
                 )
                 if data_index is None:
-                    data_index = 'insulit_{}'.format(
+                    data_index = 'insulin_{}'.format(
                         mark_id,
                     )
                     insulin_columns.append(dict(
-                        header=injection_info['insulin_mark__name'],
+                        header=injection_info['insulin_syringe__insulin_mark__name'],
                         data_index=data_index,
                     ))
                     data_indices[mark_id] = data_index

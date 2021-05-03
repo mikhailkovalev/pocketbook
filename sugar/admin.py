@@ -36,21 +36,23 @@ class InsulinInjectionInline(admin.TabularInline):
     def get_field_queryset(self, db, db_field, request):
         queryset = super().get_field_queryset(db, db_field, request)
 
-        if db_field is self.model._meta.get_field('insulin_mark'):
-            if queryset is None:
-                queryset = db_field.related_model.objects.all()
+        insylin_syringe_field_name = 'insulin_syringe'
 
-            mark_ids = InsulinSyringe.objects.filter(
-                expiry_actual__isnull=True,
+        if db_field is self.model._meta.get_field(insylin_syringe_field_name):
+            record_id = request.resolver_match.kwargs.get('object_id')
+            actual_moment = self.model._meta.get_field(
+                'record',
+            ).related_model.objects.filter(
+                pk=record_id,
             ).values_list(
-                'insulin_mark',
+                'when',
                 flat=True,
+            ).first()
+            queryset = self.model._meta.get_field(
+                insylin_syringe_field_name,
+            ).related_model.get_actual_items(
+                on_date=actual_moment,
             )
-            filtered_queryset = queryset.filter(
-                pk__in=mark_ids,
-            )
-            if filtered_queryset.exists():
-                queryset = filtered_queryset
 
         return queryset
 
@@ -58,6 +60,29 @@ class InsulinInjectionInline(admin.TabularInline):
 class SugarMeteringInline(admin.TabularInline):
     model = SugarMetering
     extra = 1
+
+    def get_field_queryset(self, db, db_field, request):
+        queryset = super().get_field_queryset(db, db_field, request)
+        
+        pack_field_name = 'pack'
+
+        if db_field is self.model._meta.get_field(pack_field_name):
+            record_id = request.resolver_match.kwargs.get('object_id')
+            actual_moment = self.model._meta.get_field(
+                'record',
+            ).related_model.objects.filter(
+                pk=record_id,
+            ).values_list(
+                'when',
+                flat=True,
+            ).first()
+            queryset = self.model._meta.get_field(
+                pack_field_name,
+            ).related_model.get_actual_items(
+                on_date=actual_moment,
+            )
+
+        return queryset
 
 
 class CommentInline(admin.TabularInline):
@@ -97,6 +122,7 @@ class InsulinSyringeAdmin(admin.ModelAdmin):
         'verbose_insulin_mark',
         'volume',
         'is_expired',
+        'get_used_amount',
         'verbose_opening',
         'verbose_expiry_plan',
         'verbose_expiry_actual',
@@ -138,6 +164,7 @@ class TestStripPackAdmin(admin.ModelAdmin):
         '__str__',
         'volume',
         'is_expired',
+        'get_used_amount',
         'verbose_expiry_plan',
         'verbose_expiry_actual',
     )
