@@ -1,6 +1,9 @@
 .idea/*
 media/*
 static/*
+.pytest_cache/*
+htmlcov/*
+.coverage
 *.pyc
 *.sqlite3
 project_conf.json

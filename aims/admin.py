@@ -91,11 +91,11 @@ class ActionAdmin(admin.ModelAdmin):
     def get_field_queryset(self, db, db_field, request):
         queryset = super().get_field_queryset(db, db_field, request)
 
-        if db_field is self.model._meta.get_field('aim'):
+        if db_field is self.model._meta.get_field('aim'):  # noqa
             own_aim_ids = self.get_own_aims_ids(
                 owner_id=request.user.id,
             )
-            queryset = db_field.related_model._default_manager.filter(
+            queryset = db_field.related_model._default_manager.filter(  # noqa
                 pk__in=own_aim_ids,
                 done=False,
             )

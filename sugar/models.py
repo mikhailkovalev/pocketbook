@@ -40,7 +40,7 @@ class Record(models.Model):
         ).strftime(
             '%Y-%m-%d %H:%M')
 
-    def sugar_level(self):
+    def sugar_level(self) -> Optional[Decimal]:
         sugar_meterings = SugarMetering.objects.filter(
             record=self.pk)
         assert sugar_meterings.count() <= 1
@@ -48,18 +48,6 @@ class Record(models.Model):
             'sugar_level',
             flat=True
         ).first()
-
-    def meal_info(self) -> Optional[str]:
-        meals = Meal.objects.filter(
-            record=self.pk
-        )
-        if not meals.exists():
-            return
-
-        return '+'.join(map(str, meals.values_list(
-            'food_quantity',
-            flat=True,
-        )))
 
     def total_meal(self) -> Optional[Decimal]:
         meals = Meal.objects.filter(
@@ -217,6 +205,11 @@ class SugarMetering(Attachment):
     """
     Уровень сахара в крови (ммоль/л)
     """
+    record = models.OneToOneField(
+        to=Record,
+        on_delete=models.CASCADE,
+        verbose_name='Запись',
+    )
     pack = models.ForeignKey(
         to='TestStripPack',
         on_delete=models.PROTECT,
@@ -376,6 +369,7 @@ class InsulinSyringe(AbstractMedication):
     get_used_amount.short_description = 'Использовано'
 
     def __str__(self):
+        # fixme: результат этой функции должен быть уникален иначе админка начнёт "схлопывать" записи
         return '{cls_name} "{insulin_mark}" ({volume} ед.) от {opening}'.format(  # noqa
             cls_name=self._meta.verbose_name,
             insulin_mark=str(self.insulin_mark),
@@ -418,7 +412,7 @@ class InsulinOrdering(models.Model, AbleToVerbolizeDateTimeAttrsMixin):
         to=InsulinKind,
         on_delete=models.PROTECT,
         related_name='+',
-        verbose_name=InsulinKind._meta.verbose_name
+        verbose_name=InsulinKind._meta.verbose_name  # noqa
     )
 
     when = models.DateField(
