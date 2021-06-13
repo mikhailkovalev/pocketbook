@@ -73,8 +73,5 @@ class Command(BaseCommand):
         call_command(
             command_name=dumpdata,
             format='json',
-            exclude=(
-                'contenttypes',
-            ),
         )
         output_stream.close()

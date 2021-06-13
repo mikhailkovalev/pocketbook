@@ -1,3 +1,6 @@
+from django.contrib.contenttypes.models import (
+    ContentType,
+)
 from django.core.management import (
     BaseCommand,
     CommandParser,
@@ -29,6 +32,7 @@ class Command(BaseCommand):
 
     def handle(self, path_to_data: str, **kw) -> None:
         self._do_migrate()
+        self._clean_contenttypes()
         self._do_load_data(path_to_data)
 
     def _do_migrate(self) -> None:
@@ -39,6 +43,10 @@ class Command(BaseCommand):
         call_command(
             migrate_command,
         )
+
+    @staticmethod
+    def _clean_contenttypes() -> None:
+        ContentType.objects.all().delete()
 
     def _do_load_data(self, path_to_data: str) -> None:
         load_data_command = LoadDataCommand(
