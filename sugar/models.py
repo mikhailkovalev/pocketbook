@@ -472,7 +472,6 @@ class TestStripPack(AbstractMedication):
             ')>'
         ).format(
             cls_name=self.__class__.__name__,
-            insulin_mark=repr(self.insulin_mark),
             volume=repr(self.volume),
             opening=repr(self.opening),
             expiry_plan=repr(self.expiry_plan),
