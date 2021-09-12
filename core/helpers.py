@@ -4,12 +4,9 @@ from copy import (
 from datetime import (
     date,
     datetime,
-    time,
 )
 from typing import (
     Optional,
-    Type,
-    Union,
 )
 
 from django.conf import (
@@ -42,33 +39,27 @@ def with_server_timezone(
     return value
 
 
-class AbleToVerbolizeDateTimeAttrsMixin:
-    def _get_verbose_datetime(
-            self,
-            attr: str,
-            fmt: str,
-            src_type: Union[Type[date], Type[time]],
-    ) -> Optional[str]:
-        assert hasattr(self, attr)
-        date_value = getattr(self, attr)
-        if date_value is None:
-            return None
-        assert isinstance(date_value, src_type)
-        return date_value.strftime(fmt)
+def _get_verbose_datetime(
+        value: Optional[date],
+        fmt: str,
+) -> Optional[str]:
+    if value is None:
+        return None
+    return value.strftime(fmt)
 
-    def get_verbose_date(
-            self,
-            attr: str,
-            fmt: str = '%Y-%m-%d',
-    ) -> Optional[str]:
-        return self._get_verbose_datetime(attr, fmt, date)
 
-    def get_verbose_datetime(
-            self,
-            attr: str,
-            fmt: str = '%Y-%m-%d %H:%M',
-    ) -> Optional[str]:
-        return self._get_verbose_datetime(attr, fmt, datetime)
+def get_verbose_date(
+        value: Optional[date],
+        fmt: str = '%Y-%m-%d',
+) -> Optional[str]:
+    return _get_verbose_datetime(value, fmt)
+
+
+def get_verbose_datetime(
+        value: Optional[datetime],
+        fmt: str = '%Y-%m-%d %H:%M',
+) -> Optional[str]:
+    return _get_verbose_datetime(value, fmt)
 
 
 def NumericSum(*args, **kwargs):

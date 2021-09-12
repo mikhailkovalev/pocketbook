@@ -10,8 +10,9 @@ from django.db import (
 )
 
 from core.helpers import (
-    AbleToVerbolizeDateTimeAttrsMixin,
     NumericSum,
+    get_verbose_date,
+    get_verbose_datetime,
     with_server_timezone,
 )
 
@@ -33,12 +34,10 @@ class Record(models.Model):
     )
 
     def when_verbose(self):
-        assert isinstance(
-            self.when, datetime)
-        return with_server_timezone(
-            self.when
-        ).strftime(
-            '%Y-%m-%d %H:%M')
+        localized_when = with_server_timezone(
+            self.when,  # noqa
+        )
+        return get_verbose_datetime(localized_when)
 
     def sugar_level(self) -> Optional[Decimal]:
         sugar_meterings = SugarMetering.objects.filter(
@@ -255,7 +254,7 @@ class Comment(Attachment):
         verbose_name_plural = 'Комментарии'
 
 
-class AbstractMedication(models.Model, AbleToVerbolizeDateTimeAttrsMixin):
+class AbstractMedication(models.Model):
     USAGES_MANAGER_NAME: Optional[str] = None
     
     class Meta:
@@ -325,20 +324,20 @@ class AbstractMedication(models.Model, AbleToVerbolizeDateTimeAttrsMixin):
         raise NotImplementedError
 
     def verbose_opening(self) -> str:
-        return self.get_verbose_date(
-            attr='opening',
+        return get_verbose_date(
+            self.opening,  # noqa
         )
     verbose_opening.short_description = opening.verbose_name
 
     def verbose_expiry_plan(self) -> Optional[str]:
-        return self.get_verbose_date(
-            attr='expiry_plan',
+        return get_verbose_date(
+            self.expiry_plan,  # noqa
         )
     verbose_expiry_plan.short_description = expiry_plan.verbose_name
 
     def verbose_expiry_actual(self) -> Optional[str]:
-        return self.get_verbose_date(
-            attr='expiry_actual',
+        return get_verbose_date(
+            self.expiry_actual,  # noqa
         )
     verbose_expiry_actual.short_description = expiry_actual.verbose_name
 
@@ -361,7 +360,7 @@ class InsulinSyringe(AbstractMedication):
     verbose_insulin_mark.short_description = insulin_mark.verbose_name
 
     def get_used_amount(self) -> int:
-        return next(iter(self.injections.aggregate(
+        return next(iter(self.injections.aggregate(  # noqa
             used_amount=NumericSum(
                 'insulin_quantity',
             ),
@@ -370,8 +369,8 @@ class InsulinSyringe(AbstractMedication):
 
     def __str__(self):
         # fixme: результат этой функции должен быть уникален иначе админка начнёт "схлопывать" записи
-        return '{cls_name} "{insulin_mark}" ({volume} ед.) от {opening}'.format(  # noqa
-            cls_name=self._meta.verbose_name,
+        return '{cls_name} "{insulin_mark}" ({volume} ед.) от {opening}'.format(
+            cls_name=self._meta.verbose_name,  # noqa
             insulin_mark=str(self.insulin_mark),
             volume=str(self.volume),
             opening=self.verbose_opening(),
@@ -396,7 +395,7 @@ class InsulinSyringe(AbstractMedication):
         )
 
 
-class InsulinOrdering(models.Model, AbleToVerbolizeDateTimeAttrsMixin):
+class InsulinOrdering(models.Model):
     class Meta:
         verbose_name = 'Выписка инсулина'
         verbose_name_plural = 'Выписки инсулина'
@@ -425,8 +424,8 @@ class InsulinOrdering(models.Model, AbleToVerbolizeDateTimeAttrsMixin):
     )
 
     def verbose_when(self) -> Optional[str]:
-        return self.get_verbose_date(
-            attr='when',
+        return get_verbose_date(
+            self.when,  # noqa
         )
     verbose_when.short_description = when.verbose_name
 
@@ -442,7 +441,7 @@ class InsulinOrdering(models.Model, AbleToVerbolizeDateTimeAttrsMixin):
 
     def __str__(self):
         return '{cls_name} от {when}'.format(
-            cls_name=self._meta.verbose_name,
+            cls_name=self._meta.verbose_name,  # noqa
             when=self.verbose_when(),
         )
 
@@ -453,7 +452,7 @@ class TestStripPack(AbstractMedication):
         verbose_name_plural = 'Пачки тест-полосок'
 
     def get_used_amount(self) -> int:
-        return self.meterings.count()
+        return self.meterings.count()  # noqa
     get_used_amount.short_description = 'Использовано'
 
     def __repr__(self):
@@ -474,6 +473,6 @@ class TestStripPack(AbstractMedication):
 
     def __str__(self):
         return '{cls_name} от {when}'.format(
-            cls_name=self._meta.verbose_name,
+            cls_name=self._meta.verbose_name,  # noqa
             when=self.verbose_opening(),
         )

@@ -13,14 +13,14 @@ from mptt.fields import (
 )
 
 from core.helpers import (
-    AbleToVerbolizeDateTimeAttrsMixin,
+    get_verbose_date,
 )
 from core.hierarchical.models import (
     Hierarchical,
 )
 
 
-class Aim(Hierarchical, AbleToVerbolizeDateTimeAttrsMixin):
+class Aim(Hierarchical):
     name = models.CharField(
         max_length=50,
         verbose_name='Наименование',
@@ -79,20 +79,20 @@ class Aim(Hierarchical, AbleToVerbolizeDateTimeAttrsMixin):
         return self.name
 
     def verbose_start_day(self) -> Optional[str]:
-        return self.get_verbose_date(
-            attr='start_day',
+        return get_verbose_date(
+            self.start_day,  # noqa
         )
     verbose_start_day.short_description = 'start day'
 
     def verbose_deadline(self) -> Optional[str]:
-        return self.get_verbose_date(
-            attr='deadline',
+        return get_verbose_date(
+            self.deadline,  # noqa
         )
     verbose_deadline.short_description = 'deadline'
 
     def verbose_created(self) -> Optional[str]:
-        return self.get_verbose_date(
-            attr='created',
+        return get_verbose_date(
+            self.created,  # noqa
         )
     verbose_created.short_description = 'created'
 
@@ -104,7 +104,7 @@ class AimHierarchy(AimHierarchyBase):
     pass
 
 
-class Action(models.Model, AbleToVerbolizeDateTimeAttrsMixin):
+class Action(models.Model):
     aim = TreeForeignKey(
         to=Aim,
         on_delete=models.CASCADE,
@@ -142,8 +142,8 @@ class Action(models.Model, AbleToVerbolizeDateTimeAttrsMixin):
         return result
 
     def verbose_when(self):
-        return self.get_verbose_date(
-            attr='when',
+        return get_verbose_date(
+            self.when,  # noqa
         )
     verbose_when.short_description = 'when'
 
