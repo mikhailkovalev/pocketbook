@@ -1,0 +1,7 @@
+ul.top_level_buttons {
+    padding-inline-start: 0px
+}
+
+ul.top_level_buttons li {
+    display: inline
+}

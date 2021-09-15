@@ -6,16 +6,40 @@
     Дневник сахаров
 {% endblock %}
 
+{% block styles %}
+    {{ block.super }}
+    <link
+        rel="stylesheet"
+        type="text/css"
+        href="{% static 'sugar/css/list.css' %}"
+    />
+{% endblock %}
+
 {% block scripts %}
     {{ block.super }}
     <script
             type="text/javascript"
             src="{% static 'sugar/js/table_script.js' %}"
     ></script>
+    <script
+            type="text/javascript"
+            src="{% static 'sugar/js/import_csv.js' %}"
+    ></script>
 {% endblock %}
 
 {% block body_params %}
     onload="onBodyLoad();"
+{% endblock %}
+
+{% block top_buttons %}
+    {{ block.super }}
+    <li>
+        <label for="import_csv" class="btn">Foo</label>
+        <input
+            id="import_csv"
+            type="file"
+        >
+    </li>
 {% endblock %}
 
 {% block content %}

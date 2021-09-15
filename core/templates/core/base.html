@@ -7,15 +7,22 @@
         {% block title %}
         {% endblock %}
     </title>
+    {% block styles %}
+        <link
+            rel="stylesheet"
+            type="text/css"
+            href="{% static 'core/css/base.css' %}"
+        />
+    {% endblock %}
     {% block scripts %}
-    <script
-            type="text/javascript"
-            src="{% static 'core/js/constants.js' %}"
-    ></script>
-    <script
-            type="text/javascript"
-            src="{% static 'core/js/ajax_tools.js' %}"
-    ></script>
+        <script
+                type="text/javascript"
+                src="{% static 'core/js/constants.js' %}"
+        ></script>
+        <script
+                type="text/javascript"
+                src="{% static 'core/js/ajax_tools.js' %}"
+        ></script>
     {% endblock %}
 </head>
 <body
@@ -23,15 +30,21 @@
         {% endblock %}
 >
     <div id="content">
+        <ul class="top_level_buttons">
+            {% block top_buttons %}
+                {% if request.user.is_superuser %}
+                <li>
+                    <input
+                        id="get_dump"
+                        type="button"
+                        onclick="location.href='{% url 'core:download_json_dump' %}'"
+                        value="Скачать БД"
+                    >
+                </li>
+                {% endif %}
+            {% endblock %}
+        </ul>
         {% block content %}
-            {% if request.user.is_superuser %}
-                <input
-                    id="get_dump"
-                    type="button"
-                    onclick="location.href='{% url 'core:download_json_dump' %}'"
-                    value="Скачать БД"
-                >
-            {% endif %}
         {% endblock %}
     </div>
     <div id="sidebar">
