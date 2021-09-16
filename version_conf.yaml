@@ -1,11 +1,11 @@
 # Изменять в соответствии со стандартом семантического
 # версионирования: https://semver.org/lang/ru/
-version: 4.0.0
+version: 5.0.0
 
 data_model:
     # Версия структуры БД
-    version: 3.0.0
+    version: 4.0.0
 
 api_model:
     # Версия API, предоставляемого приложением.
-    version: 2.0.2
+    version: 2.1.0
