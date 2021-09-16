@@ -6,6 +6,7 @@ from decimal import (
     Decimal,
 )
 
+import pytest
 import pytz
 from django.conf import (
     settings,
@@ -537,15 +538,12 @@ def test_multiple_meterings(
         record=record,
         sugar_level=Decimal('4.8'),
     )
-    try:
+
+    with pytest.raises(IntegrityError):
         create_sugar_metering(
             record=record,
             sugar_level=Decimal('6.8'),
         )
-    except IntegrityError:
-        pass
-    else:
-        raise AssertionError('Should fail if multiple records attached')
 
 
 def test_multiple_meals_list_view(
