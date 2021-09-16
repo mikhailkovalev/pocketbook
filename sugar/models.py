@@ -99,6 +99,10 @@ class Record(models.Model):
         verbose_name = 'Запись дневника сахаров'
         verbose_name_plural = 'Записи дневника сахаров'
 
+        unique_together = (
+            ('who', 'when'),
+        )
+
         ordering = (
             'who',
             '-when',
