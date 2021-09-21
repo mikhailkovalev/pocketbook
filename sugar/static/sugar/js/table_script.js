@@ -1,30 +1,73 @@
 function onBodyLoad() {
-    document.getElementById('submit').click();
+    document.getElementById('refresh').click();
 }
 
 function getTableRows(url) {
+    var form = document.getElementById('list_view_form');
+
     var request = createAjaxRequest({
         url: url,
-        onSuccess: renderTable,
+        onSuccess: onSuccessGetTableRows,
         onFailure: function () { alert('Failure!'); },
     });
     if (!request) {
         return;
     }
 
-    request.send(
-        getFormData('list_view_form').join('&'),
-    );
+    request.send(getFormData(form).join('&'));
 }
 
-function renderTable(request) {
+function onSuccessGetTableRows(request) {
     var response = JSON.parse(request.responseText);
+
+    updateForm(request, response);
+    renderTable(request, response);
+}
+
+function updateForm(request, response) {
+    var firstShown = response['first_shown'];
+    var lastShown = response['last_shown'];
+    var totalRowsCount = response['total_rows_count'];
+    var totalPagesCount = response['total_pages_count'];
+    var pageNumber = response['page_number'];
+
+    var firstPageButton = document.getElementById('first_page');
+    var prevPageButton = document.getElementById('prev_page');
+    var nextPageButton = document.getElementById('next_page');
+    var lastPageButton = document.getElementById('last_page');
+    var pageInput = document.getElementById('id_page_number');
+
+    pageInput.setAttribute(
+        'max',
+        totalPagesCount,
+    );
+    pageInput.value = pageNumber;
+
+    if (firstShown == 1) {
+        prevPageButton.setAttribute('disabled', 'disabled');
+        firstPageButton.setAttribute('disabled', 'disabled');
+    } else {
+        prevPageButton.removeAttribute('disabled');
+        firstPageButton.removeAttribute('disabled');
+    }
+
+    if (lastShown == totalRowsCount) {
+        nextPageButton.setAttribute('disabled', 'disabled');
+        lastPageButton.setAttribute('disabled', 'disabled');
+    } else {
+        nextPageButton.removeAttribute('disabled');
+        lastPageButton.removeAttribute('disabled');
+    }
+
+}
+
+function renderTable(request, response) {
     var listViewTableDiv = document.getElementById(
         'list_view_table_div',
     );
     listViewTableDiv.innerText = '';
 
-    var fisrtShown = response['first_shown'];
+    var firstShown = response['first_shown'];
     var lastShown = response['last_shown'];
     var totalRowsCount = response['total_rows_count'];
 
@@ -33,7 +76,7 @@ function renderTable(request) {
     table.cellSpacing = 0;
     listViewTableDiv.append(table);
 
-    var tableCaptionText = `Показаны записи с ${fisrtShown} по ${lastShown} из ${totalRowsCount}`;
+    var tableCaptionText = `Показаны записи с ${firstShown} по ${lastShown} из ${totalRowsCount}`;
     var tableCaption = document.createElement('caption');
     tableCaption.append(
         document.createTextNode(tableCaptionText),
@@ -66,4 +109,32 @@ function renderTable(request) {
             tableRow.append(cell);
         }
     }
+}
+
+function _getPage(url, pageNumber) {
+    var pageInput = document.getElementById('id_page_number');
+    pageInput.value = pageNumber;
+    getTableRows(url);
+}
+
+function _shiftPage(url, shift) {
+    var pageInput = document.getElementById('id_page_number');
+    var pageNumber = parseInt(pageInput.value) + shift;
+    _getPage(url, pageNumber);
+}
+
+function getNextPage(url) {
+    _shiftPage(url, 1);
+}
+
+function getPrevPage(url) {
+    _shiftPage(url, -1);
+}
+
+function getFirstPage(url) {
+    _getPage(url, 1);
+}
+
+function getLastPage(url) {
+    _getPage(url, -1);
 }

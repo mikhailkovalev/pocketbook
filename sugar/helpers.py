@@ -1,5 +1,4 @@
 import calendar
-
 from bisect import (
     bisect_right,
 )
@@ -48,7 +47,6 @@ from django.conf import (
 from django.db.models import (
     DateTimeField,
     Model,
-    Q,
     QuerySet,
 )
 from django.db.models.functions import (
@@ -59,7 +57,6 @@ from pytz import (
 )
 from sugar.enums import (
     DateAggregateEnum,
-    PeriodEnum,
 )
 
 from .models import (
@@ -71,104 +68,12 @@ ONE_DAY = timedelta(days=1)
 ONE_WEEK = timedelta(days=7)
 
 
-def _get_day_month_ago(date_: date) -> date:
-    first_of_this_month: date = date_.replace(day=1)
-    last_day_of_past_month: date = first_of_this_month - ONE_DAY
-
-    days_in_past_month: int
-    # _, days_in_past_month = calendar.monthrange(
-    #     last_day_of_past_month.year,
-    #     last_day_of_past_month.month,
-    # )
-    days_in_past_month = last_day_of_past_month.day
-
-    replace_kwargs: Dict[str, int] = {
-        'day': date_.day,
-    }
-    if days_in_past_month < date_.day:
-        replace_kwargs['day'] = days_in_past_month
-    day_month_ago = last_day_of_past_month.replace(
-        **replace_kwargs,
-    )
-
-    return day_month_ago
-
-
 def _get_first_day_of_next_month(date_: date) -> date:
     _, days_in_this_month = calendar.monthrange(
         date_.year,
         date_.month,
     )
     return date_.replace(day=days_in_this_month)+ONE_DAY
-
-
-def _get_day_year_ago(date_: date) -> date:
-    replace_kwargs: Dict[str, int] = {
-        'year': date_.year - 1,
-    }
-    if date_.day == 29 and date_.month == 2:
-        replace_kwargs['day'] = 28
-
-    return date_.replace(
-        **replace_kwargs,
-    )
-
-
-def _get_today_period_filter() -> Q:
-    today = date.today()
-    tomorrow = today + ONE_DAY
-    return Q(
-        when__gte=today,
-        when__lt=tomorrow,
-    )
-
-
-def _get_two_days_period_filter() -> Q:
-    today = date.today()
-    yesterday = today - ONE_DAY
-    tomorrow = today + ONE_DAY
-    return Q(
-        when__gte=yesterday,
-        when__lt=tomorrow,
-    )
-
-
-def _get_week_period_filter() -> Q:
-    today = date.today()
-    tomorrow = today + ONE_DAY
-    one_week_ago = today - ONE_WEEK + ONE_DAY
-    return Q(
-        when__gte=one_week_ago,
-        when__lt=tomorrow,
-    )
-
-
-def _get_month_period_filter() -> Q:
-    today = date.today()
-    tomorrow = today + ONE_DAY
-
-    day_month_ago = _get_day_month_ago(today) + ONE_DAY
-
-    return Q(
-        when__gte=day_month_ago,
-        when__lt=tomorrow,
-    )
-
-
-# todo: принимать today как аргумент
-# fixme: что, если какая-то группа (например неделя)
-#  не укладывается в параметры фильтра?
-_PERIOD_FILTER_GETTERS: Dict[str, Callable[[], Q]] = {
-    PeriodEnum.NONE: Q,
-    PeriodEnum.TODAY: _get_today_period_filter,
-    PeriodEnum.TWO_DAYS: _get_two_days_period_filter,
-    PeriodEnum.WEEK: _get_week_period_filter,
-    PeriodEnum.MONTH: _get_month_period_filter,
-}
-
-
-def get_filter_by_period(period: str):
-    return _PERIOD_FILTER_GETTERS[period]()
 
 
 TRUNC_TYPES: Dict[str, str] = {
@@ -204,23 +109,26 @@ class SliceParams(NamedTuple):
     records: QuerySet
     slice_filter: Optional[Dict[str, Any]]
     total_rows_count: int
+    total_pages_count: int
+    page_number: int
     first_shown: int
     last_shown: int
 
 
 def slice_records(
         records: QuerySet,
-        page_number: int,
+        target_page_number: int,
         page_size: int,
 ) -> SliceParams:
+    # при значении -1 вернём последнюю страницу
+    assert target_page_number == -1 or target_page_number >= 1
+
     time_labels_iterator = records.values(
         'when',
         'time_label',
     ).iterator(
         chunk_size=100,
     )
-    slice_stop = page_number * page_size
-    slice_start = slice_stop - page_size
 
     groupped_iterator = groupby(
         iterable=time_labels_iterator,
@@ -229,21 +137,47 @@ def slice_records(
 
     max_when: Optional[datetime] = None
     min_when: Optional[datetime] = None
-    idx = -1
-    for idx, (_, group) in enumerate(groupped_iterator):
-        if idx == slice_start:
-            min_when = max_when = next(group)['when']
-        if slice_start <= idx < slice_stop:
-            try:
-                min_when = min(map(itemgetter('when'), group))
-            except ValueError:
-                pass
+    current_page_max_when = None
+    current_page_min_when = None
+    group_idx = -1
 
-    total_rows_count = idx + 1
-    # Переменная `idx` по завершению цикла как раз
+    current_page_number = 0
+    # страницы нумеруем с 1
+
+    for group_idx, (_, group) in enumerate(groupped_iterator):
+        group_time_labels = map(itemgetter('when'), group)
+        
+        if group_idx % page_size == 0:
+            if current_page_number == target_page_number:
+                # предыдущая страница была той, которую запросили
+                max_when = current_page_max_when
+                min_when = current_page_min_when
+            current_page_number += 1
+            current_page_max_when = next(group_time_labels)
+            current_page_min_when = current_page_max_when
+
+        try:
+            current_page_min_when = min(group_time_labels)
+        except ValueError:
+            # на случай, если итератор пустой, например, если
+            # в группе была всего одна запись и её мы уже
+            # извлекли в блоке if через next
+            pass
+
+    if max_when is None:
+        # если так и не достигли запрошенной страницы -- отдадим последнюю
+        max_when = current_page_max_when
+        min_when = current_page_min_when
+        target_page_number = current_page_number
+
+    total_rows_count = group_idx + 1
+    # Переменная `group_idx` по завершению цикла как раз
     # будет хранить индекс последней строки,
     # соответственно их общее количество на единицу
     # больше.
+
+    slice_stop = target_page_number * page_size
+    slice_start = slice_stop - page_size
 
     slice_filter: Optional[Dict[str, Any]] = None
     if max_when is not None and min_when is not None:
@@ -258,6 +192,8 @@ def slice_records(
         records=records,
         slice_filter=slice_filter,
         total_rows_count=total_rows_count,
+        total_pages_count=current_page_number,
+        page_number=target_page_number,
         first_shown=1+slice_start,
         last_shown=min(total_rows_count, slice_stop),
     )

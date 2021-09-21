@@ -15,20 +15,3 @@ class DateAggregateEnum(BaseEnumerate):
         MONTH: 'По месяцам',
         YEAR: 'По годам',
     }
-
-
-class PeriodEnum(BaseEnumerate):
-    NONE = 'none'
-    TODAY = 'today'
-    TWO_DAYS = 'two_days'
-    WEEK = 'week'
-    MONTH = 'month'
-    CUSTOM = 'custom'
-
-    values = {
-        NONE: 'Без периода',
-        TODAY: 'Сегодня',
-        TWO_DAYS: 'Вчера и сегодня',
-        WEEK: 'Последние семь дней',
-        MONTH: 'Последние 30 дней',
-    }

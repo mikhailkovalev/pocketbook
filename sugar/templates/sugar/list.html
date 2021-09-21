@@ -20,14 +20,45 @@
 
 {% block content %}
     {{ block.super }}
-    <form id="list_view_form">
+    <form
+            id="list_view_form"
+            onsubmit="return false;"
+    >
         {% csrf_token %}
         {{ list_view_form.as_p }}
         <input
-                id="submit"
+                id="first_page"
+                type="button"
+                value="<<"
+                disabled
+                onclick="getFirstPage('{% url 'sugar-app:rows' %}');"
+        >
+        <input
+                id="prev_page"
+                type="button"
+                value="<"
+                disabled
+                onclick="getPrevPage('{% url 'sugar-app:rows' %}');"
+        >
+        <input
+                id="refresh"
                 type="button"
                 value="Обновить"
                 onclick="getTableRows('{% url 'sugar-app:rows' %}');"
+        >
+        <input
+                id="next_page"
+                type="button"
+                value=">"
+                disabled
+                onclick="getNextPage('{% url 'sugar-app:rows' %}');"
+        >
+        <input
+                id="last_page"
+                type="button"
+                value=">>"
+                disabled
+                onclick="getLastPage('{% url 'sugar-app:rows' %}');"
         >
     </form>
     <div id="list_view_table_div">Nothing to show.</div>

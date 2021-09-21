@@ -49,7 +49,6 @@ from .helpers import (
     AttachmentMeta,
     SliceParams,
     export_attachments,
-    get_filter_by_period,
     get_injections_verbose_data,
     get_meal_verbose_data,
     get_sugar_verbose_data,
@@ -78,14 +77,17 @@ def list_view(request):
 @requires_csrf_token
 @login_required
 def rows_view(request, *args, **kwargs):
-    period = request.POST.get('period')
     groupping = request.POST.get('groupping')
 
     page_size = 10  # FIXME: get it from request
-    page_number = 1  # FIXME: get it from request
+
+    page_number = 1
+    try:
+        page_number = int(request.POST.get('page_number'))
+    except ValueError:
+        pass
 
     records = Record.objects.filter(
-        get_filter_by_period(period),
         who=request.user.id,
     ).annotate(
         time_label=Trunc(
@@ -104,7 +106,7 @@ def rows_view(request, *args, **kwargs):
 
     slice_params: SliceParams = slice_records(
         records=records,
-        page_number=page_number,
+        target_page_number=page_number,
         page_size=page_size,
     )
 
@@ -192,6 +194,8 @@ def rows_view(request, *args, **kwargs):
         rows=response_rows,
         columns=columns,
         total_rows_count=slice_params.total_rows_count,
+        total_pages_count=slice_params.total_pages_count,
+        page_number=slice_params.page_number,
         first_shown=slice_params.first_shown,
         last_shown=slice_params.last_shown,
     )

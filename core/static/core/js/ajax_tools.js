@@ -50,10 +50,7 @@ function createAjaxRequest(kwargs) {
     return request;
 }
 
-function getFormData(formId) {
-    var form = document.getElementById(
-        formId,
-    );
+function getFormData(form) {
     var formData = new FormData(form);
     var formParams = [];
     for (let [key, value] of formData.entries()) {
