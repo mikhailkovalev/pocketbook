@@ -480,3 +480,21 @@ class TestStripPack(AbstractMedication):
             cls_name=self._meta.verbose_name,  # noqa
             when=self.verbose_opening(),
         )
+
+
+class Aggregation(models.Model):
+    aggregation_type = models.CharField(
+        max_length=6,
+    )
+    who = models.ForeignKey(
+        to='auth.User',
+        on_delete=models.CASCADE,
+        related_name='day_aggregations',
+        verbose_name='Владелец',
+    )
+    when = ...  # fixme
+
+    class Meta:
+        constraints = [
+
+        ]
