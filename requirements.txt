@@ -1,7 +1,7 @@
 Django==3.2.8
 pytz==2018.5
-pyyaml==5.3.1
-pymysql==0.9.3
+pyyaml==5.4.1
+mysqlclient==2.0.3
 numpy==1.14.5
 scipy==1.1.0
 django-mptt==0.11.0
