@@ -201,3 +201,5 @@ assert isinstance(MEDIA_URL, str)
 
 STATIC_ROOT = static_section.get('STATIC_ROOT')
 assert isinstance(STATIC_ROOT, str)
+
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
