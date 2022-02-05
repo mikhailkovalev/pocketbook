@@ -56,4 +56,5 @@ class Command(BaseCommand):
         call_command(
             load_data_command,
             path_to_data,
+            verbosity=3,
         )
