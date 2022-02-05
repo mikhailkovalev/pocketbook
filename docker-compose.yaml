@@ -1,0 +1,27 @@
+version: '3.3'
+
+services:
+  mysql:
+    image: "mysql:5.7.34"
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+      MYSQL_DATABASE: pocketbook
+      MYSQL_USER: pocketbook
+      MYSQL_PASSWORD: pocketbook
+    ports:
+      - "3306:3306"
+    volumes:
+      - './mysql-datadir:/var/lib/mysql'
+    command:
+      - "--character-set-server=utf8mb4"
+      - "--collation-server=utf8mb4_unicode_ci"
+  postgres:
+    image: 'postgres:11-alpine'
+    environment:
+      POSTGRES_DB: pocketbook
+      POSTGRES_USER: pocketbook
+      POSTGRES_PASSWORD: pocketbook
+    ports:
+      - "5432:5432"
+    volumes:
+      - "./postgres-datadir:/var/lib/postgresql/data"
