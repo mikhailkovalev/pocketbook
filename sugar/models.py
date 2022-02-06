@@ -41,6 +41,7 @@ class Record(models.Model):
         return get_verbose_datetime(localized_when)
 
     def sugar_level(self) -> Optional[Decimal]:
+        # FIXME: N+1 problem
         sugar_meterings = SugarMetering.objects.filter(
             record=self.pk)
         assert sugar_meterings.count() <= 1
@@ -50,6 +51,7 @@ class Record(models.Model):
         ).first()
 
     def total_meal(self) -> Optional[Decimal]:
+        # FIXME: N+1 problem
         meals = Meal.objects.filter(
             record=self.pk
         )
@@ -62,6 +64,7 @@ class Record(models.Model):
         ))
 
     def injections_info(self):
+        # FIXME: N+1 problem
         injections = InsulinInjection.objects.filter(
             record=self.pk
         )
@@ -86,6 +89,7 @@ class Record(models.Model):
         )
 
     def short_comments(self):
+        # FIXME: N+1 problem
         comments = tuple(
             comment.short()
             for comment in Comment.objects.filter(
