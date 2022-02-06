@@ -113,6 +113,9 @@ class RecordAdmin(admin.ModelAdmin):
         InsulinInjectionInline,
         CommentInline,
     )
+    ordering = (
+        '-when',
+    )
 
 
 @admin.register(InsulinSyringe)
