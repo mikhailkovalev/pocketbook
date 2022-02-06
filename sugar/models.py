@@ -108,11 +108,6 @@ class Record(models.Model):
             ('who', 'when'),
         )
 
-        ordering = (
-            'who',
-            '-when',
-        )
-
 
 class Attachment(models.Model):
     """

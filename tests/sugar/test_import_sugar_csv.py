@@ -82,7 +82,7 @@ def test_success(
 
     records = tuple(map(
         model_to_dict,
-        Record.objects.all(),
+        Record.objects.order_by('-when'),
     ))
     assert records == (
         {
