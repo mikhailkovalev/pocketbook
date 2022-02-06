@@ -105,6 +105,7 @@ TIME_LABEL_ENDS: Dict[str, Callable[[datetime], datetime]] = {
 }
 
 
+# FIXME: don't use NamedTuples?
 class SliceParams(NamedTuple):
     records: QuerySet
     slice_filter: Optional[Dict[str, Any]]
@@ -199,6 +200,7 @@ def slice_records(
     )
 
 
+# FIXME: don't use NamedTuples?
 class AttachmentMeta(NamedTuple):
     model: Type[Model]
     # Класс модели атачмента
