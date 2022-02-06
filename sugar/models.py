@@ -28,6 +28,7 @@ class Record(models.Model):
         on_delete=models.CASCADE,
         related_name='records',
         verbose_name='Автор',
+        # FIXME: add index?
     )
     when = models.DateTimeField(
         verbose_name='Момент создания записи',
