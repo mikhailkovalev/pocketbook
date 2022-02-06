@@ -205,4 +205,36 @@ assert isinstance(STATIC_ROOT, str)
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
+DEFAULT_PAGE_SIZE = 10
+
 # TODO: конфигурация логирования
+LOGGING = dict(
+    version=1,
+    disable_existing_loggers=False,
+    loggers={
+        '': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'django.db.backends': dict(
+            level='DEBUG',
+        ),
+        'django.db.backends.schema': dict(
+            level='DEBUG',
+        ),
+    },
+    handlers={
+        'console': {
+            'class': 'logging.StreamHandler',
+            'level': 'DEBUG',
+            'formatter': 'text',
+        },
+    },
+    formatters={
+        'text': {
+            '()': 'logging.Formatter',
+            'format': '%(message)s',
+        },
+    },
+)

@@ -45,12 +45,13 @@ from django.conf import (
     settings,
 )
 from django.db.models import (
+    CharField,
     DateTimeField,
     Model,
     QuerySet,
 )
 from django.db.models.functions import (
-    Trunc,
+    Trunc, Cast,
 )
 from pytz import (
     timezone,
@@ -108,7 +109,6 @@ TIME_LABEL_ENDS: Dict[str, Callable[[datetime], datetime]] = {
 # FIXME: don't use NamedTuples?
 class SliceParams(NamedTuple):
     records: QuerySet
-    slice_filter: Optional[Dict[str, Any]]
     total_rows_count: int
     total_pages_count: int
     page_number: int
@@ -124,76 +124,44 @@ def slice_records(
     # при значении -1 вернём последнюю страницу
     assert target_page_number == -1 or target_page_number >= 1
 
-    time_labels_iterator = records.values(
-        'when',
-        'time_label',
-    ).iterator(
-        chunk_size=100,
+    records = records.annotate(
+        time_label_str=Cast('time_label', CharField()),
     )
 
-    groupped_iterator = groupby(
-        iterable=time_labels_iterator,
-        key=itemgetter('time_label'),
+    distinct_time_labels = records.distinct().order_by(
+        '-time_label_str',
+    ).values_list(
+        'time_label_str',
+        flat=1,
     )
 
-    max_when: Optional[datetime] = None
-    min_when: Optional[datetime] = None
-    current_page_max_when = None
-    current_page_min_when = None
-    group_idx = -1
+    total_rows_count = distinct_time_labels.count()
 
-    current_page_number = 0
-    # страницы нумеруем с 1
+    total_pages_count, tail = divmod(total_rows_count, page_size)
+    if tail > 0:
+        total_pages_count += 1
 
-    for group_idx, (_, group) in enumerate(groupped_iterator):
-        group_time_labels = map(itemgetter('when'), group)
-        
-        if group_idx % page_size == 0:
-            if current_page_number == target_page_number:
-                # предыдущая страница была той, которую запросили
-                max_when = current_page_max_when
-                min_when = current_page_min_when
-            current_page_number += 1
-            current_page_max_when = next(group_time_labels)
-            current_page_min_when = current_page_max_when
-
-        try:
-            current_page_min_when = min(group_time_labels)
-        except ValueError:
-            # на случай, если итератор пустой, например, если
-            # в группе была всего одна запись и её мы уже
-            # извлекли в блоке if через next
-            pass
-
-    if max_when is None:
-        # если так и не достигли запрошенной страницы -- отдадим последнюю
-        max_when = current_page_max_when
-        min_when = current_page_min_when
-        target_page_number = current_page_number
-
-    total_rows_count = group_idx + 1
-    # Переменная `group_idx` по завершению цикла как раз
-    # будет хранить индекс последней строки,
-    # соответственно их общее количество на единицу
-    # больше.
+    if target_page_number == -1:
+        target_page_number = total_pages_count
 
     slice_stop = target_page_number * page_size
     slice_start = slice_stop - page_size
 
-    slice_filter: Optional[Dict[str, Any]] = None
-    if max_when is not None and min_when is not None:
-        slice_filter = dict(
-            when__range=(min_when, max_when),
-        )
-        records = records.filter(
-            **slice_filter,
-        )
+    time_labels_on_page = distinct_time_labels[slice_start:slice_stop]
+    # fixme: теоретический записей может не быть
+    top_time_label = time_labels_on_page[0]
+    bottom_time_label = time_labels_on_page[len(time_labels_on_page) - 1]
+
+    slice_filter = dict(
+        time_label_str__gte=bottom_time_label,
+        time_label_str__lte=top_time_label,
+    )
+    records = records.filter(**slice_filter)
 
     return SliceParams(
         records=records,
-        slice_filter=slice_filter,
         total_rows_count=total_rows_count,
-        total_pages_count=current_page_number,
+        total_pages_count=total_pages_count,
         page_number=target_page_number,
         first_shown=1+slice_start,
         last_shown=min(total_rows_count, slice_stop),
@@ -221,7 +189,7 @@ class AttachmentMeta(NamedTuple):
 
 
 def export_attachments(
-        records: QuerySet,
+        records: List[Dict[str, Any]],
         *args: Tuple[AttachmentMeta, ...],
 ) -> None:
     records_by_ids: Dict[int, Dict[str, Any]] = {
@@ -328,7 +296,7 @@ def get_injections_verbose_data(
     for row in response_rows:
         for idx in data_indices.values():
             if row[idx] == 0:
-                row[idx] = '-'
+                row[idx] = None
 
     insulin_columns.sort(key=itemgetter('header'))
     columns.extend(insulin_columns)
@@ -376,7 +344,7 @@ def _get_single_sugar_verbose_data(
             )
             row['sugar_level'] = str(sugar_value['sugar_level'])
         except StopIteration:
-            row['sugar_level'] = '-'
+            row['sugar_level'] = None
 
 
 def _extend_stored_meterings(
