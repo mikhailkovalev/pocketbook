@@ -57,6 +57,7 @@ default_config_names: Iterator[str] = map(
     ),
 )
 
+# noinspection PyTypeChecker
 default_config_paths: Iterator[str] = starmap(
     os.path.join,
     product(
