@@ -79,7 +79,7 @@ def list_view(request):
 def rows_view(request, *args, **kwargs):
     groupping = request.POST.get('groupping')
 
-    page_size = 10  # FIXME: get it from request
+    page_size = settings.DEFAULT_PAGE_SIZE  # FIXME: get it from request
 
     page_number = 1
     try:
@@ -96,12 +96,6 @@ def rows_view(request, *args, **kwargs):
             output_field=DateTimeField(),
             tzinfo=timezone(settings.TIME_ZONE),
         ),
-        localized_when=Trunc(
-            expression='when',
-            kind='second',
-            output_field=DateTimeField(),
-            tzinfo=timezone(settings.TIME_ZONE),
-        ),
     )
 
     slice_params: SliceParams = slice_records(
@@ -110,11 +104,27 @@ def rows_view(request, *args, **kwargs):
         page_size=page_size,
     )
 
-    records = slice_params.records.values(
+    records = slice_params.records.annotate(
+        localized_when=Trunc(
+            expression='when',
+            kind='second',
+            output_field=DateTimeField(),
+            tzinfo=timezone(settings.TIME_ZONE),
+        ),
+    ).order_by(
+        '-when',
+    ).values(
         'id',
         'when',
         'localized_when',
         'time_label',
+    )
+
+    # fixme: в теории записей может не быть
+    max_when = records[0]['when']
+    min_when = records[len(records)-1]['when']
+    records_filter = dict(
+        when__range=(min_when, max_when),
     )
 
     export_attachments(
@@ -123,7 +133,7 @@ def rows_view(request, *args, **kwargs):
             model=Meal,
             set_name='meals',
             fk_name='record',
-            filter_=slice_params.slice_filter,
+            filter_=records_filter,
             export_values=(
                 'food_quantity',
             ),
@@ -132,7 +142,7 @@ def rows_view(request, *args, **kwargs):
             model=InsulinInjection,
             set_name='injections',
             fk_name='record',
-            filter_=slice_params.slice_filter,
+            filter_=records_filter,
             export_values=(
                 'insulin_syringe__insulin_mark',
                 'insulin_syringe__insulin_mark__name',
@@ -143,7 +153,7 @@ def rows_view(request, *args, **kwargs):
             model=SugarMetering,
             set_name='sugar_meterings',
             fk_name='record',
-            filter_=slice_params.slice_filter,
+            filter_=records_filter,
             export_values=(
                 'sugar_level',
             ),
