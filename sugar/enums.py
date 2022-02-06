@@ -1,6 +1,7 @@
 from core.enums import BaseEnumerate
 
 
+# FIXME: use django-choices?
 class DateAggregateEnum(BaseEnumerate):
     NONE = 'none'
     DAY = 'day'
