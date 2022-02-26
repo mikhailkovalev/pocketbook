@@ -205,4 +205,6 @@ assert isinstance(STATIC_ROOT, str)
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
+DEFAULT_PAGE_SIZE = 10
+
 # TODO: конфигурация логирования

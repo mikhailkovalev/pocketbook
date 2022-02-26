@@ -79,7 +79,7 @@ def list_view(request):
 def rows_view(request, *args, **kwargs):
     groupping = request.POST.get('groupping')
 
-    page_size = 10  # FIXME: get it from request
+    page_size = settings.DEFAULT_PAGE_SIZE  # FIXME: get it from request
 
     page_number = 1
     try:

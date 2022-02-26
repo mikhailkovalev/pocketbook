@@ -328,7 +328,7 @@ def get_injections_verbose_data(
     for row in response_rows:
         for idx in data_indices.values():
             if row[idx] == 0:
-                row[idx] = '-'
+                row[idx] = None
 
     insulin_columns.sort(key=itemgetter('header'))
     columns.extend(insulin_columns)
@@ -376,7 +376,7 @@ def _get_single_sugar_verbose_data(
             )
             row['sugar_level'] = str(sugar_value['sugar_level'])
         except StopIteration:
-            row['sugar_level'] = '-'
+            row['sugar_level'] = None
 
 
 def _extend_stored_meterings(

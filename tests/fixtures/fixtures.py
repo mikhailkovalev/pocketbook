@@ -62,3 +62,13 @@ def resources() -> str:
         os.path.pardir,
         'resources',
     ))
+
+
+# noinspection PyShadowingNames
+@pytest.fixture(autouse=True)
+def setup_test_settings(
+        settings,
+
+        default_page_size,
+):
+    settings.DEFAULT_PAGE_SIZE = default_page_size
