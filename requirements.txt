@@ -1,4 +1,4 @@
-Django==3.2.12
+Django==3.2.15
 pytz==2018.5
 pyyaml==5.4.1
 mysqlclient==2.0.3  # sudo apt install libmysqlclient-dev
