@@ -32,3 +32,34 @@ internationalization:
   USE_I18N: true
   USE_L10N: true
   USE_TZ: true
+logging:
+  version: 1
+  disable_existing_loggers: False,
+  loggers:
+    '':
+      handlers: ['file']
+      level: DEBUG
+      propagate: True
+    uvicorn:
+      level: DEBUG
+    django.db:
+      handlers: ['file']
+      level: DEBUG
+    django.db.backends.schema:
+      handlers: ['file']
+      formatter: verbose
+      level: DEBUG
+  handlers:
+    console:
+      class: logging.StreamHandler
+      level: DEBUG
+      formatter: text
+    file:
+      class: logging.FileHandler
+      level: DEBUG
+      formatter: text
+      filename: /path/to/pocketbook.log
+  formatters:
+    text:
+      '()': logging.Formatter
+      format: '%(levelname)s - %(message)s'

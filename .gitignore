@@ -10,3 +10,4 @@ project_conf.json
 project_conf.yaml
 mysql-datadir/*
 postgres-datadir/*
+pocketbook.log

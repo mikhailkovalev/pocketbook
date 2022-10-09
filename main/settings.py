@@ -205,4 +205,7 @@ assert isinstance(STATIC_ROOT, str)
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
-# TODO: конфигурация логирования
+try:
+    LOGGING = config['logging']
+except KeyError:
+    pass
