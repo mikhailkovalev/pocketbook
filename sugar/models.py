@@ -43,52 +43,60 @@ class Record(models.Model):
     def sugar_level(self) -> Optional[Decimal]:
         # FIXME: N+1 problem
         sugar_meterings = SugarMetering.objects.filter(
-            record=self.pk)
-        assert sugar_meterings.count() <= 1
-        return sugar_meterings.values_list(
+            record=self.pk,
+        ).values_list(
             'sugar_level',
-            flat=True
-        ).first()
+            flat=True,
+        )
+
+        sugar_meterings_count = len(sugar_meterings)
+        if sugar_meterings_count == 0:
+            return None
+        elif sugar_meterings_count == 1:
+            return sugar_meterings[0]
+        else:
+            raise AssertionError
 
     def total_meal(self) -> Optional[Decimal]:
         # FIXME: N+1 problem
         meals = Meal.objects.filter(
             record=self.pk
-        )
-        if not meals.exists():
-            return
-
-        return sum(meals.values_list(
+        ).values_list(
             'food_quantity',
             flat=1,
-        ))
+        )
 
-    def injections_info(self):
+        meals_count = len(meals)
+
+        if meals_count == 0:
+            return None
+        else:
+            return sum(meals)
+
+    def injections_info(self) -> Optional[str]:
         # FIXME: N+1 problem
         injections = InsulinInjection.objects.filter(
             record=self.pk
-        )
-        if injections.count() == 0:
-            return
-
-        injections_by_kind = defaultdict(list)
-        injections = injections.values_list(
+        ).values_list(
             'insulin_syringe__insulin_mark__name',
             'insulin_quantity',
         )
-        for kind, quantity in injections:
-            injections_by_kind[kind].append(quantity)
 
-        return ', '.join(
-            '{} {}'.format(
-                '+'.join(map(str, quantities)),
-                kind
+        injections_count = len(injections)
+
+        if injections_count == 0:
+            return None
+        else:
+            injections_by_kind = defaultdict(list)
+            for kind, quantity in injections:
+                injections_by_kind[kind].append(quantity)
+
+            return ', '.join(
+                '{} {}'.format('+'.join(map(str, quantities)), kind)
+                for kind, quantities in injections_by_kind.items()
             )
-            for kind, quantities
-            in injections_by_kind.items()
-        )
 
-    def short_comments(self):
+    def short_comments(self) -> Optional[str]:
         # FIXME: N+1 problem
         comments = tuple(
             comment.short()
