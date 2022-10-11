@@ -132,6 +132,15 @@ class Record(models.Model):
             '-when',
         )
 
+    def refresh_from_db(self, using=None, fields=None):
+        super().refresh_from_db(using, fields)
+
+        if fields is None:
+            delattr(self, '_sugar_level')
+            delattr(self, '_total_meal')
+            delattr(self, '_injections_info')
+            delattr(self, '_short_comments')
+
 
 class Attachment(models.Model):
     """
