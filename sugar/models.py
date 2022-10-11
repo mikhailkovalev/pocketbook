@@ -11,6 +11,7 @@ from django.db import (
 
 from core.helpers import (
     NumericSum,
+    delattr_if_exists,
     get_verbose_date,
     get_verbose_datetime,
     with_server_timezone,
@@ -133,13 +134,16 @@ class Record(models.Model):
         )
 
     def refresh_from_db(self, using=None, fields=None):
+        """
+        Если обновляем объект целиком (fields=None), то сбрасываем кэши
+        """
         super().refresh_from_db(using, fields)
 
         if fields is None:
-            delattr(self, '_sugar_level')
-            delattr(self, '_total_meal')
-            delattr(self, '_injections_info')
-            delattr(self, '_short_comments')
+            delattr_if_exists(self, '_sugar_level')
+            delattr_if_exists(self, '_total_meal')
+            delattr_if_exists(self, '_injections_info')
+            delattr_if_exists(self, '_short_comments')
 
 
 class Attachment(models.Model):

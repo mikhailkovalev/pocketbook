@@ -64,3 +64,13 @@ def get_verbose_datetime(
 
 def NumericSum(*args, **kwargs):
     return Coalesce(Sum(*args, **kwargs), 0)
+
+
+def delattr_if_exists(obj, name):
+    """
+    В отличие от обычного `delattr` не бросает
+    `AttributeError`, если пытаемся удалить
+    атрибут, которого нет у объекта
+    """
+    if hasattr(obj, name):
+        delattr(obj, name)
