@@ -35,91 +35,6 @@ class Record(models.Model):
         verbose_name='Момент создания записи',
     )
 
-    def when_verbose(self):
-        localized_when = with_server_timezone(
-            self.when,  # noqa
-        )
-        return get_verbose_datetime(localized_when)
-
-    def sugar_level(self) -> Optional[Decimal]:
-        # FIXME: N+1 problem
-        if not hasattr(self, '_sugar_level'):
-            sugar_meterings = SugarMetering.objects.filter(
-                record=self.pk,
-            ).values_list(
-                'sugar_level',
-                flat=True,
-            )
-
-            sugar_meterings_count = len(sugar_meterings)
-            if sugar_meterings_count == 0:
-                self._sugar_level = None
-            elif sugar_meterings_count == 1:
-                self._sugar_level = sugar_meterings[0]
-            else:
-                raise AssertionError
-
-        return self._sugar_level  # noqa
-
-    def total_meal(self) -> Optional[Decimal]:
-        # FIXME: N+1 problem
-        if not hasattr(self, '_total_meal'):
-            meals = Meal.objects.filter(
-                record=self.pk,
-            ).values_list(
-                'food_quantity',
-                flat=1,
-            )
-
-            meals_count = len(meals)
-
-            if meals_count == 0:
-                self._total_meal = None
-            else:
-                self._total_meal = sum(meals)
-
-        return self._total_meal
-
-    def injections_info(self) -> Optional[str]:
-        # FIXME: N+1 problem
-        if not hasattr(self, '_injections_info'):
-            injections = InsulinInjection.objects.filter(
-                record=self.pk,
-            ).values_list(
-                'insulin_syringe__insulin_mark__name',
-                'insulin_quantity',
-            )
-
-            injections_count = len(injections)
-
-            if injections_count == 0:
-                self._injections_info = None
-            else:
-                injections_by_kind = defaultdict(list)
-                for kind, quantity in injections:
-                    injections_by_kind[kind].append(quantity)
-
-                self._injections_info = ', '.join(
-                    '{} {}'.format('+'.join(map(str, quantities)), kind)
-                    for kind, quantities in injections_by_kind.items()
-                )
-
-        return self._injections_info
-
-    def short_comments(self) -> Optional[str]:
-        # FIXME: N+1 problem
-        if not hasattr(self, '_short_comments'):
-            comments = tuple(
-                comment.short()
-                for comment in Comment.objects.filter(record=self.pk)
-            )
-            if not comments:
-                self._short_comments = None
-            else:
-                self._short_comments = '; '.join(comments)
-
-        return self._short_comments
-
     class Meta:
         verbose_name = 'Запись дневника сахаров'
         verbose_name_plural = 'Записи дневника сахаров'
@@ -133,17 +48,6 @@ class Record(models.Model):
             '-when',
         )
 
-    def refresh_from_db(self, using=None, fields=None):
-        """
-        Если обновляем объект целиком (fields=None), то сбрасываем кэши
-        """
-        super().refresh_from_db(using, fields)
-
-        if fields is None:
-            delattr_if_exists(self, '_sugar_level')
-            delattr_if_exists(self, '_total_meal')
-            delattr_if_exists(self, '_injections_info')
-            delattr_if_exists(self, '_short_comments')
 
 class Attachment(models.Model):  # FIXME: -> BaseAttachment? AbstractAttachment?
     """

@@ -1,3 +1,7 @@
+from collections import defaultdict
+from decimal import Decimal
+from typing import Optional
+
 from django.contrib import (
     admin,
 )
@@ -5,6 +9,7 @@ from django.contrib import (
 from core.admin import (
     ownable,
 )
+from core.helpers import get_verbose_datetime, with_server_timezone
 
 from .forms import (
     CommentForm,
@@ -98,7 +103,7 @@ class RecordAdmin(admin.ModelAdmin):
     Класс админки для записи дневника.
     """
     list_display = (
-        'when_verbose',
+        'when_display',
         'sugar_level',
         'total_meal',
         'injections_info',
@@ -113,6 +118,74 @@ class RecordAdmin(admin.ModelAdmin):
         InsulinInjectionInline,
         CommentInline,
     )
+
+    # noinspection PyMethodMayBeStatic
+    def when_display(self, obj: Record) -> str:
+        localized_when = with_server_timezone(obj.when)
+        return get_verbose_datetime(localized_when)
+
+    # noinspection PyMethodMayBeStatic
+    def sugar_level(self, obj: Record) -> Optional[Decimal]:
+        try:
+            sugar_metering = obj.sugarmetering
+        except SugarMetering.DoesNotExist:
+            return None
+
+        return sugar_metering.sugar_level
+
+    # noinspection PyMethodMayBeStatic
+    def total_meal(self, obj: Record) -> Optional[Decimal]:
+        meals = obj.meal_set.all()
+
+        meals_count = len(meals)
+        if meals_count == 0:
+            return None
+        else:
+            return sum(meal.food_quantity for meal in meals)
+    
+    # noinspection PyMethodMayBeStatic
+    def injections_info(self, obj: Record) -> Optional[str]:
+        injections = obj.insulininjection_set.all()
+
+        injections_count = len(injections)
+        if injections_count == 0:
+            return None
+        else:
+            injections_by_kind = defaultdict(list)
+
+            injection: InsulinInjection
+            for injection in injections:
+                kind = injection.insulin_syringe.insulin_mark.name
+                injections_by_kind[kind].append(injection.insulin_quantity)
+
+            return ', '.join(
+                '{} {}'.format('+'.join(map(str, quantities)), kind)
+                for kind, quantities in injections_by_kind.items()
+            )
+
+    # noinspection PyMethodMayBeStatic
+    def short_comments(self, obj: Record) -> Optional[str]:
+        comments = obj.comment_set.all()
+
+        short_comments = [
+            comment.short()
+            for comment in comments
+        ]
+
+        if not short_comments:
+            return None
+        else:
+            return '; '.join(short_comments)
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        return queryset.select_related(
+            'sugarmetering',
+        ).prefetch_related(
+            'meal_set',
+            'insulininjection_set__insulin_syringe__insulin_mark',
+            'comment_set',
+        )
 
 
 @admin.register(InsulinSyringe)
