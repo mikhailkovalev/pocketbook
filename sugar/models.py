@@ -145,8 +145,7 @@ class Record(models.Model):
             delattr_if_exists(self, '_injections_info')
             delattr_if_exists(self, '_short_comments')
 
-
-class Attachment(models.Model):
+class Attachment(models.Model):  # FIXME: -> BaseAttachment? AbstractAttachment?
     """
     Прикрепление к записи. На каждую запись может
     ссылаться неограничено много прикреплений
