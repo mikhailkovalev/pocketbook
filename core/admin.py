@@ -6,7 +6,7 @@ def ownable(owner_field: str):
                 queryset = super().get_queryset(request)
 
                 queryset = queryset.filter(
-                    **{f'{owner_field}': request.user},
+                    **{owner_field: request.user},
                 )
 
                 return queryset
