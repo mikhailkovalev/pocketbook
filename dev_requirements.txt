@@ -6,3 +6,4 @@ pytest-django==4.2.0
 lxml==4.9.1
 coverage==5.5
 pytest-lazy-fixture==0.6.3
+django-debug-toolbar==3.7.0

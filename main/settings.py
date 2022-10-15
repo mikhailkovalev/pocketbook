@@ -26,6 +26,13 @@ from .helpers import (
     get_config,
 )
 
+try:
+    import debug_toolbar
+except ImportError:
+    DJANGO_DEBUG_TOOLBAR = False
+else:
+    DJANGO_DEBUG_TOOLBAR = True
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(
     os.path.dirname(os.path.abspath(__file__)))
@@ -88,6 +95,14 @@ ALLOWED_HOSTS = security_section.get(
     'ALLOWED_HOSTS')
 assert isinstance(ALLOWED_HOSTS, list)
 
+try:
+    INTERNAL_IPS = security_section['INTERNAL_IPS']
+except KeyError:
+    pass
+else:
+    assert isinstance(INTERNAL_IPS, list)
+
+
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -98,6 +113,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'mptt',
+    *(['debug_toolbar'] if DJANGO_DEBUG_TOOLBAR else []),
 
     # todo: define plugins in config-file
     'core',
@@ -107,6 +123,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    *(['debug_toolbar.middleware.DebugToolbarMiddleware'] if DJANGO_DEBUG_TOOLBAR else []),  # noqa
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
