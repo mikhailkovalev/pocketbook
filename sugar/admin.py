@@ -1,10 +1,14 @@
+import logging
+
 from django.contrib import (
     admin,
 )
+from django.contrib.admin.views.main import ChangeList
 
 from core.admin import (
     ownable,
 )
+from core.helpers import track_time
 
 from .forms import (
     CommentForm,
@@ -20,6 +24,8 @@ from .models import (
     SugarMetering,
     TestStripPack,
 )
+
+logger = logging.getLogger(__name__)
 
 admin.site.register(InsulinKind)
 
@@ -91,6 +97,18 @@ class CommentInline(admin.TabularInline):
     form = CommentForm
 
 
+class RecordAdminChangeList(ChangeList):
+    def get_results(self, request):
+        with track_time() as tracker:
+            results = super().get_results(request)
+        logger.debug(
+            '%r elapsed time: %.3fsec',
+            f'{type(self).__name__}.get_results',
+            tracker.elapsed_time,
+        )
+        return results
+
+
 @admin.register(Record)
 @ownable('who')
 class RecordAdmin(admin.ModelAdmin):
@@ -113,6 +131,9 @@ class RecordAdmin(admin.ModelAdmin):
         InsulinInjectionInline,
         CommentInline,
     )
+
+    def get_changelist(self, request, **kwargs):
+        return RecordAdminChangeList
 
 
 @admin.register(InsulinSyringe)
