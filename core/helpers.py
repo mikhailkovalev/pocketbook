@@ -5,6 +5,10 @@ from datetime import (
     date,
     datetime,
 )
+from time import (
+    perf_counter,
+    perf_counter_ns,
+)
 from typing import (
     Optional,
 )
@@ -64,3 +68,26 @@ def get_verbose_datetime(
 
 def NumericSum(*args, **kwargs):
     return Coalesce(Sum(*args, **kwargs), 0)
+
+
+# noinspection PyPep8Naming
+class track_time:
+    def __init__(self, use_ns: bool = False):
+        if use_ns:
+            self._time_func = perf_counter_ns
+        else:
+            self._time_func = perf_counter
+
+        self._start = None
+        self._finish = None
+
+    def __enter__(self):
+        self._start = self._time_func()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._finish = self._time_func()
+
+    @property
+    def elapsed_time(self):
+        return self._finish - self._start
