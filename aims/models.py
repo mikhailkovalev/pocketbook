@@ -58,6 +58,8 @@ class Aim(Hierarchical):
         verbose_name = 'Цель'
         verbose_name_plural = 'Цели'
 
+    # todo: -> cached_property; reset with refresh_from_db
+    #  blocked until python<3.8
     @property
     def elapsed_time(self) -> Decimal:
         subtree_ids = self.get_descendants(
