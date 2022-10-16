@@ -7,10 +7,6 @@ from decimal import (
 )
 
 import pytest
-import pytz
-from django.conf import (
-    settings,
-)
 from django.db.utils import (
     IntegrityError,
 )
@@ -159,12 +155,11 @@ def test_add_record(
 
 def test_records_list_ownership(
         create_client,
+        create_datetime,
         create_record,
         create_user,
         admin,
 ):
-    tz = pytz.timezone(settings.TIME_ZONE)
-
     admin2 = create_user(
         username='admin2',
         is_staff=True,
@@ -174,53 +169,23 @@ def test_records_list_ownership(
     data = [
         dict(
             whose=admin,
-            when=tz.localize(datetime(
-                year=2021,
-                month=5,
-                day=16,
-                hour=10,
-                minute=0,
-            )),
+            when=create_datetime('2021-05-16T10:00:00'),
         ),
         dict(
             whose=admin,
-            when=tz.localize(datetime(
-                year=2021,
-                month=5,
-                day=16,
-                hour=11,
-                minute=0,
-            )),
+            when=create_datetime('2021-05-16T11:00:00'),
         ),
         dict(
             whose=admin,
-            when=tz.localize(datetime(
-                year=2021,
-                month=5,
-                day=16,
-                hour=12,
-                minute=0,
-            )),
+            when=create_datetime('2021-05-16T12:00:00'),
         ),
         dict(
             whose=admin2,
-            when=tz.localize(datetime(
-                year=2021,
-                month=5,
-                day=16,
-                hour=10,
-                minute=30,
-            )),
+            when=create_datetime('2021-05-16T10:30:00'),
         ),
         dict(
             whose=admin2,
-            when=tz.localize(datetime(
-                year=2021,
-                month=5,
-                day=16,
-                hour=11,
-                minute=30,
-            )),
+            when=create_datetime('2021-05-16T11:30:00'),
         ),
     ]
 
@@ -267,31 +232,18 @@ def test_records_list_ownership(
 
 def test_records_list_display_basic(
         create_client,
+        create_datetime,
         create_record,
         admin,
 ):
-    tz = pytz.timezone(settings.TIME_ZONE)
-
     create_record(
         whose=admin,
-        when=tz.localize(datetime(
-            year=2021,
-            month=5,
-            day=16,
-            hour=10,
-            minute=0,
-        )),
+        when=create_datetime('2021-05-16T10:00:00'),
         metering_params=None,
     )
     create_record(
         whose=admin,
-        when=tz.localize(datetime(
-            year=2021,
-            month=5,
-            day=16,
-            hour=11,
-            minute=0,
-        )),
+        when=create_datetime('2021-05-16T11:00:00'),
         metering_params={
             'sugar_level': Decimal('4.8'),
         },
@@ -352,20 +304,13 @@ def test_records_list_display_basic(
 
 def test_change_display_basic(
         create_client,
+        create_datetime,
         create_record,
         admin
 ):
-    tz = pytz.timezone(settings.TIME_ZONE)
-
     record = create_record(
         whose=admin,
-        when=tz.localize(datetime(
-            year=2021,
-            month=5,
-            day=16,
-            hour=11,
-            minute=0,
-        )),
+        when=create_datetime('2021-05-16T11:00:00'),
         metering_params={
             'sugar_level': Decimal('4.8'),
         },
@@ -530,6 +475,7 @@ def test_change_display_basic(
 
 
 def test_multiple_meterings(
+        create_datetime,
         create_record,
         create_sugar_metering,
 ):
@@ -882,6 +828,7 @@ def test_actuality_for_new(
         create_insulin_syringe,
         create_test_strip_pack,
         admin,
+        tz,
 ):
     create_test_strip_pack(  # expired pack
         whose=admin,
@@ -917,7 +864,7 @@ def test_actuality_for_new(
         ),
     )
 
-    today = pytz.timezone(settings.TIME_ZONE).localize(datetime.now()).date()
+    today = tz.localize(datetime.now()).date()
     create_test_strip_pack(  # actual pack
         whose=admin,
         volume=50,
@@ -1010,6 +957,7 @@ def test_actuality_for_new(
 
 def test_actuality_for_edit(
         create_client,
+        create_datetime,
         create_insulin_syringe,
         create_test_strip_pack,
         create_record,
@@ -1083,17 +1031,9 @@ def test_actuality_for_edit(
         ),
     )
 
-    tz = pytz.timezone(settings.TIME_ZONE)
-
     record = create_record(
         whose=admin,
-        when=tz.localize(datetime(
-            year=2021,
-            month=4,
-            day=16,
-            hour=11,
-            minute=0,
-        )),
+        when=create_datetime('2021-04-16T11:00:00'),
     )
 
     client = create_client(

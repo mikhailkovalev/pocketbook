@@ -25,16 +25,16 @@ if TYPE_CHECKING:
 
 
 @pytest.fixture
-def timezone():
+def tz():
     return pytz.timezone(settings.TIME_ZONE)
 
 
 @pytest.fixture
-def create_datetime(timezone) -> Callable[[str], datetime]:
+def create_datetime(tz) -> Callable[[str], datetime]:
     # TODO: убрать и использовать datetime.fromisoformat
     #  после обновления python на 3.7+
     def _create_datetime(raw: str):
-        return timezone.localize(
+        return tz.localize(
             datetime.strptime(raw, '%Y-%m-%dT%H:%M:%S'),
         )
     return _create_datetime

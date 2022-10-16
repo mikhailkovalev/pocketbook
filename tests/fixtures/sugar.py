@@ -201,6 +201,7 @@ def create_sugar_metering(
 @pytest.fixture
 def create_record(
         admin,
+        create_datetime,
         create_meal,
         create_sugar_metering,
         create_insulin_injection,
@@ -216,14 +217,7 @@ def create_record(
     ):
 
         if when is None:
-            tz = pytz.timezone(settings.TIME_ZONE)
-            when = tz.localize(datetime(
-                year=2021,
-                month=5,
-                day=10,
-                hour=13,
-                minute=15,
-            ))
+            when = create_datetime('2021-05-10T13:15:00')
 
         record = Record.objects.create(
             who=whose,
