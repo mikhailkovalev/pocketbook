@@ -25,7 +25,7 @@ class CommentForm(forms.ModelForm):
 class ListViewForm(forms.Form):
     groupping = forms.ChoiceField(
         label='Группировка',
-        choices=DateAggregateEnum.get_choices(),
+        choices=DateAggregateEnum.choices,
         initial=DateAggregateEnum.DAY,
     )
     page_number = forms.IntegerField(

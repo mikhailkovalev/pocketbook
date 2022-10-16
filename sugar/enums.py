@@ -1,18 +1,9 @@
-from core.enums import BaseEnumerate
+from django.db.models import TextChoices
 
 
-# FIXME: use django-choices?
-class DateAggregateEnum(BaseEnumerate):
-    NONE = 'none'
-    DAY = 'day'
-    WEEK = 'week'
-    MONTH = 'month'
-    YEAR = 'year'
-
-    values = {
-        NONE: 'Без группировки',
-        DAY: 'По дням',
-        WEEK: 'По неделям',
-        MONTH: 'По месяцам',
-        YEAR: 'По годам',
-    }
+class DateAggregateEnum(TextChoices):
+    NONE = ('none', 'Без группировки')
+    DAY = ('day', 'По дням')
+    WEEK = ('week', 'По неделям')
+    MONTH = ('month', 'По месяцам')
+    YEAR = ('year', 'По годам')
