@@ -256,7 +256,7 @@ def export_attachments(
             )
 
 
-def get_meal_verbose_data(
+def get_meal_display_data(
         records: Iterable[Dict[str, Any]],
         columns: List[Dict[str, str]],
         response_rows: List[Dict[str, Any]],
@@ -287,7 +287,7 @@ def get_meal_verbose_data(
         row['meal'] = str(value) if value else None
 
 
-def get_injections_verbose_data(
+def get_injections_display_data(
         records: Iterable[Dict[str, Any]],
         columns: List[Dict[str, str]],
         response_rows: List[Dict[str, Any]],
@@ -334,7 +334,7 @@ def get_injections_verbose_data(
     columns.extend(insulin_columns)
 
 
-def get_sugar_verbose_data(
+def get_sugar_display_data(
         records: List[Dict[str, Any]],  # на самом деле не list, а values-QuerySet
         columns: List[Dict[str, str]],
         response_rows: List[Dict[str, Any]],
@@ -342,13 +342,13 @@ def get_sugar_verbose_data(
         groupping: str,
 ) -> None:
     if groupping == DateAggregateEnum.NONE:
-        _get_single_sugar_verbose_data(
+        _get_single_sugar_display_data(
             records,
             columns,
             response_rows,
         )
     else:
-        _get_groupped_sugar_verbose_data(
+        _get_groupped_sugar_display_data(
             records,
             columns,
             response_rows,
@@ -357,7 +357,7 @@ def get_sugar_verbose_data(
         )
 
 
-def _get_single_sugar_verbose_data(
+def _get_single_sugar_display_data(
         records: Collection[Dict[str, Any]],
         columns: List[Dict[str, str]],
         response_rows: List[Dict[str, Any]],
@@ -542,7 +542,7 @@ def _extend_and_interpolate(
     )
 
 
-def _get_groupped_sugar_verbose_data(
+def _get_groupped_sugar_display_data(
         records: List[Dict[str, Any]],  # на самом деле не list, а values-QuerySet
         columns: List[Dict[str, str]],
         response_rows: List[Dict[str, Any]],
@@ -657,18 +657,18 @@ def _get_groupped_sugar_verbose_data(
             elif value < min_value:
                 min_value = value
 
-        def make_verbose(value: float) -> str:
-            verbose = '{:.2f}'.format(value)
-            if verbose[-1] == '0':
-                verbose = verbose[:-1]
+        def get_display(value: float) -> str:
+            display = '{:.2f}'.format(value)
+            if display[-1] == '0':
+                display = display[:-1]
 
-            return verbose
+            return display
 
-        verbose_values = map(
-            make_verbose,
+        display_values = map(
+            get_display,
             (min_value, max_value),
         )
-        row['min_sugar'], row['max_sugar'] = verbose_values
+        row['min_sugar'], row['max_sugar'] = display_values
 
         row['meterings_count'] = records_group_len
         ext_start = ext_stop

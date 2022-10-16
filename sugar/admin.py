@@ -8,7 +8,11 @@ from django.contrib.admin.views.main import ChangeList
 from core.admin import (
     ownable,
 )
-from core.helpers import track_time
+from core.helpers import (
+    get_datetime_display,
+    track_time,
+    with_server_timezone,
+)
 
 from .forms import (
     CommentForm,
@@ -116,7 +120,7 @@ class RecordAdmin(admin.ModelAdmin):
     Класс админки для записи дневника.
     """
     list_display = (
-        'when_verbose',
+        'get_when_display',
         'sugar_level',
         'total_meal',
         'injections_info',
@@ -132,6 +136,11 @@ class RecordAdmin(admin.ModelAdmin):
         CommentInline,
     )
 
+    def get_when_display(self, obj: Record):
+        localized_when = with_server_timezone(obj.when)
+        return get_datetime_display(localized_when)
+    get_when_display.short_description = 'when'
+
     def get_changelist(self, request, **kwargs):
         return RecordAdminChangeList
 
@@ -140,13 +149,13 @@ class RecordAdmin(admin.ModelAdmin):
 @ownable('whose')
 class InsulinSyringeAdmin(admin.ModelAdmin):
     list_display = (
-        'verbose_insulin_mark',
+        'get_insulin_mark_name',
         'volume',
         'is_expired',
         'get_used_amount',
-        'verbose_opening',
-        'verbose_expiry_plan',
-        'verbose_expiry_actual',
+        'get_opening_display',
+        'get_expiry_plan_display',
+        'get_expiry_actual_display',
     )
     fields = (
         'insulin_mark',
@@ -164,8 +173,8 @@ class InsulinSyringeAdmin(admin.ModelAdmin):
 @ownable('whose')
 class InsulinOrderingAdmin(admin.ModelAdmin):
     list_display = (
-        'verbose_insulin_mark',
-        'verbose_when',
+        'get_insulin_mark_name',
+        'get_when_display',
         'next_ordering_plan_date',
     )
     fields = (
@@ -186,8 +195,8 @@ class TestStripPackAdmin(admin.ModelAdmin):
         'volume',
         'is_expired',
         'get_used_amount',
-        'verbose_expiry_plan',
-        'verbose_expiry_actual',
+        'get_expiry_plan_display',
+        'get_expiry_actual_display',
     )
     fields = (
         'volume',

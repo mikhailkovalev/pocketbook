@@ -49,9 +49,9 @@ from .helpers import (
     AttachmentMeta,
     SliceParams,
     export_attachments,
-    get_injections_verbose_data,
-    get_meal_verbose_data,
-    get_sugar_verbose_data,
+    get_injections_display_data,
+    get_meal_display_data,
+    get_sugar_display_data,
     slice_records,
 )
 from .models import (
@@ -156,12 +156,12 @@ def rows_view(request, *args, **kwargs):
             header='Дата/время',
         ),
     ]
-    get_verbose_time_label: Callable[[datetime], str] = TIME_LABEL_FORMAT[groupping]
+    time_label_display: Callable[[datetime], str] = TIME_LABEL_FORMAT[groupping]
     key_func: Callable[[Dict[str, Any]], Any] = itemgetter('time_label')
 
     response_rows: List[Dict[str, Any]] = [
         {
-            'time_label': get_verbose_time_label(time_label),
+            'time_label': time_label_display(time_label),
         }
         for time_label, _ in groupby(records, key_func)
     ]
@@ -170,20 +170,20 @@ def rows_view(request, *args, **kwargs):
     #  чтобы при каждом редактировании проверялась
     #  уникальность data_index-ов (в дебаге) с печатью
     #  сообщений об ошибках в лог.
-    get_sugar_verbose_data(
+    get_sugar_display_data(
         records,
         columns,
         response_rows,
         key_func,
         groupping,
     )
-    get_meal_verbose_data(
+    get_meal_display_data(
         records,
         columns,
         response_rows,
         key_func,
     )
-    get_injections_verbose_data(
+    get_injections_display_data(
         records,
         columns,
         response_rows,

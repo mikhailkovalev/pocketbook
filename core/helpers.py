@@ -43,7 +43,7 @@ def with_server_timezone(
     return value
 
 
-def _get_verbose_datetime(
+def _get_datetime_display(
         value: Optional[date],
         fmt: str,
 ) -> Optional[str]:
@@ -52,18 +52,18 @@ def _get_verbose_datetime(
     return value.strftime(fmt)
 
 
-def get_verbose_date(
+def get_date_display(
         value: Optional[date],
         fmt: str = '%Y-%m-%d',
 ) -> Optional[str]:
-    return _get_verbose_datetime(value, fmt)
+    return _get_datetime_display(value, fmt)
 
 
-def get_verbose_datetime(
+def get_datetime_display(
         value: Optional[datetime],
         fmt: str = '%Y-%m-%d %H:%M',
 ) -> Optional[str]:
-    return _get_verbose_datetime(value, fmt)
+    return _get_datetime_display(value, fmt)
 
 
 def NumericSum(*args, **kwargs):

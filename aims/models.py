@@ -13,7 +13,7 @@ from mptt.fields import (
 )
 
 from core.helpers import (
-    get_verbose_date,
+    get_date_display,
 )
 from core.hierarchical.models import (
     Hierarchical,
@@ -78,24 +78,6 @@ class Aim(Hierarchical):
         self.name: str
         return self.name
 
-    def verbose_start_day(self) -> Optional[str]:
-        return get_verbose_date(
-            self.start_day,  # noqa
-        )
-    verbose_start_day.short_description = 'start day'
-
-    def verbose_deadline(self) -> Optional[str]:
-        return get_verbose_date(
-            self.deadline,  # noqa
-        )
-    verbose_deadline.short_description = 'deadline'
-
-    def verbose_created(self) -> Optional[str]:
-        return get_verbose_date(
-            self.created,  # noqa
-        )
-    verbose_created.short_description = 'created'
-
 
 AimHierarchyBase = Aim.get_hierarchy_cls()
 
@@ -141,14 +123,14 @@ class Action(models.Model):
             ))
         return result
 
-    def verbose_when(self):
-        return get_verbose_date(
+    def get_when_display(self):
+        return get_date_display(
             self.when,  # noqa
         )
-    verbose_when.short_description = 'when'
+    get_when_display.short_description = 'when'
 
     def __str__(self):
         return ': '.join((
-            self.verbose_when(),
+            self.get_when_display(),
             self.short_description(),
         ))

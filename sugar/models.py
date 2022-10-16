@@ -11,9 +11,7 @@ from django.db import (
 
 from core.helpers import (
     NumericSum,
-    get_verbose_date,
-    get_verbose_datetime,
-    with_server_timezone,
+    get_date_display,
 )
 
 
@@ -33,12 +31,6 @@ class Record(models.Model):
     when = models.DateTimeField(
         verbose_name='Момент создания записи',
     )
-
-    def when_verbose(self):
-        localized_when = with_server_timezone(
-            self.when,  # noqa
-        )
-        return get_verbose_datetime(localized_when)
 
     def sugar_level(self) -> Optional[Decimal]:
         # FIXME: N+1 problem
@@ -332,23 +324,23 @@ class AbstractMedication(models.Model):
     def get_used_amount(self) -> int:
         raise NotImplementedError
 
-    def verbose_opening(self) -> str:
-        return get_verbose_date(
+    def get_opening_display(self) -> str:
+        return get_date_display(
             self.opening,  # noqa
         )
-    verbose_opening.short_description = opening.verbose_name
+    get_opening_display.short_description = opening.verbose_name
 
-    def verbose_expiry_plan(self) -> Optional[str]:
-        return get_verbose_date(
+    def get_expiry_plan_display(self) -> Optional[str]:
+        return get_date_display(
             self.expiry_plan,  # noqa
         )
-    verbose_expiry_plan.short_description = expiry_plan.verbose_name
+    get_expiry_plan_display.short_description = expiry_plan.verbose_name
 
-    def verbose_expiry_actual(self) -> Optional[str]:
-        return get_verbose_date(
+    def get_expiry_actual_display(self) -> Optional[str]:
+        return get_date_display(
             self.expiry_actual,  # noqa
         )
-    verbose_expiry_actual.short_description = expiry_actual.verbose_name
+    get_expiry_actual_display.short_description = expiry_actual.verbose_name
 
 
 class InsulinSyringe(AbstractMedication):
@@ -364,9 +356,9 @@ class InsulinSyringe(AbstractMedication):
         on_delete=models.PROTECT,
     )
 
-    def verbose_insulin_mark(self) -> str:
+    def get_insulin_mark_name(self) -> str:
         return self.insulin_mark.name
-    verbose_insulin_mark.short_description = insulin_mark.verbose_name
+    get_insulin_mark_name.short_description = insulin_mark.verbose_name
 
     def get_used_amount(self) -> int:
         return next(iter(self.injections.aggregate(  # noqa
@@ -382,7 +374,7 @@ class InsulinSyringe(AbstractMedication):
             cls_name=self._meta.verbose_name,  # noqa
             insulin_mark=str(self.insulin_mark),
             volume=str(self.volume),
-            opening=self.verbose_opening(),
+            opening=self.get_opening_display(),
         )
 
     def __repr__(self):
@@ -432,15 +424,15 @@ class InsulinOrdering(models.Model):
         null=True,
     )
 
-    def verbose_when(self) -> Optional[str]:
-        return get_verbose_date(
+    def get_when_display(self) -> Optional[str]:
+        return get_date_display(
             self.when,  # noqa
         )
-    verbose_when.short_description = when.verbose_name
+    get_when_display.short_description = when.verbose_name
 
-    def verbose_insulin_mark(self) -> str:
+    def get_insulin_mark_name(self) -> str:
         return self.insulin_mark.name
-    verbose_insulin_mark.short_description = insulin_mark.verbose_name
+    get_insulin_mark_name.short_description = insulin_mark.verbose_name
 
     def __repr__(self):
         return '<{cls_name}(when={when})>'.format(
@@ -451,7 +443,7 @@ class InsulinOrdering(models.Model):
     def __str__(self):
         return '{cls_name} от {when}'.format(
             cls_name=self._meta.verbose_name,  # noqa
-            when=self.verbose_when(),
+            when=self.get_when_display(),
         )
 
 
@@ -483,5 +475,5 @@ class TestStripPack(AbstractMedication):
     def __str__(self):
         return '{cls_name} от {when}'.format(
             cls_name=self._meta.verbose_name,  # noqa
-            when=self.verbose_opening(),
+            when=self.get_opening_display(),
         )

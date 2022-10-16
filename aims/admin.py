@@ -2,6 +2,7 @@ from django.contrib import (
     admin,
 )
 
+from core.helpers import get_date_display
 from core.hierarchical.admin import (
     HierarchicalAdmin,
 )
@@ -33,8 +34,8 @@ class AimAdmin(HierarchicalAdmin):
     list_display = (
         'name',
         'done',
-        'verbose_created',
-        'verbose_deadline',
+        'created_display',
+        'deadline_display',
         'estimated_time',
         'elapsed_time',
     )
@@ -51,11 +52,21 @@ class AimAdmin(HierarchicalAdmin):
         ActionInline,
     )
 
+    # noinspection PyMethodMayBeStatic
+    def deadline_display(self, obj: Aim) -> str:
+        return get_date_display(obj.deadline)
+    deadline_display.short_description = 'deadline'
+
+    # noinspection PyMethodMayBeStatic
+    def created_display(self, obj: Aim) -> str:
+        return get_date_display(obj.created)
+    created_display.short_description = 'created'
+
 
 @admin.register(Action)
 class ActionAdmin(admin.ModelAdmin):
     list_display = (
-        'verbose_when',
+        'get_when_display',
         'aim',
         'elapsed_time',
         'short_description',

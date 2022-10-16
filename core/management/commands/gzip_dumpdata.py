@@ -15,6 +15,7 @@ from django.core.management.commands.dumpdata import (
 )
 
 from core.helpers import (
+    get_datetime_display,
     with_server_timezone,
 )
 
@@ -42,14 +43,13 @@ class Command(BaseCommand):
     @classmethod
     def generate_filename(cls):
         data_model_version = get_data_model_version()
-        today_verbose = with_server_timezone(
-            datetime.now(),
-        ).strftime(
-            '%Y-%m-%d_%H-%M-%S',
+        today_display = get_datetime_display(
+            with_server_timezone(datetime.now()),
+            fmt='%Y-%m-%d_%H-%M-%S',
         )
         filename = '{prefix}-{date}-v{version}.json.gz'.format(
             prefix='pocketbook',
-            date=today_verbose,
+            date=today_display,
             version=data_model_version,
         )
         return filename
