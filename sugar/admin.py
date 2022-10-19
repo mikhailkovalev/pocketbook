@@ -136,6 +136,11 @@ class RecordAdmin(admin.ModelAdmin):
         CommentInline,
     )
 
+    ordering = (
+        'who',
+        '-when',
+    )
+
     def get_when_display(self, obj: Record):
         localized_when = with_server_timezone(obj.when)
         return get_datetime_display(localized_when)
