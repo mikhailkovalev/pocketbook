@@ -20,7 +20,7 @@ from sugar.models import (
 
 @pytest.fixture
 def csv_file_name() -> str:
-    return 'import-sugar-csv-correct.csv'
+    return 'correct.csv'
 
 
 @pytest.fixture
@@ -30,6 +30,8 @@ def csv_file(
 ) -> str:
     return os.path.abspath(os.path.join(
         resources,
+        'sugar',
+        'import-sugar-csv',
         csv_file_name,
     ))
 
@@ -191,15 +193,15 @@ def test_fail_if_many_packs(
     ),
     (
         (
-            'import-sugar-csv-wrong-date.csv',
+            'wrong-date.csv',
             "Incorrect date value '20210915' in line 2",
         ),
         (
-            'import-sugar-csv-wrong-time.csv',
+            'wrong-time.csv',
             "Incorrect time value '3-3' in line 2",
         ),
         (
-            'import-sugar-csv-wrong-sugar-level.csv',
+            'wrong-sugar-level.csv',
             "Incorrect sugar_level value '5.55' in line 2",
         ),
     ),
