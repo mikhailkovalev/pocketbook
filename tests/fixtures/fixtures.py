@@ -1,4 +1,5 @@
 import os.path
+import pathlib
 from datetime import (
     datetime,
 )
@@ -62,3 +63,10 @@ def resources() -> str:
         os.path.pardir,
         'resources',
     ))
+
+
+@pytest.fixture
+def spam(request):
+    # Works with parametrized tests only
+    # Raises an `AttributeError` if unparametrized
+    yield request.param
