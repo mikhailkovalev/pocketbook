@@ -36,6 +36,9 @@ internationalization:
   USE_I18N: true
   USE_L10N: true
   USE_TZ: true
+custom:
+  # Wait database timeout in seconds
+  WAIT_DB_TIMEOUT: 10
 logging:
   version: 1
   disable_existing_loggers: False,

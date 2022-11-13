@@ -222,6 +222,9 @@ assert isinstance(STATIC_ROOT, str)
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
+custom_section = config.get('custom', {})
+WAIT_DB_TIMEOUT = custom_section.get('WAIT_DB_TIMEOUT', 10)
+
 try:
     LOGGING = config['logging']
 except KeyError:
