@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
+import sys
 from itertools import (
     product,
     starmap,
@@ -83,7 +84,16 @@ security_section = config.get('security', {})
 
 # SECURITY WARNING: keep the secret key used in
 # production secret!
-SECRET_KEY = security_section.get('SECRET_KEY')
+SECRET_KEY = os.getenv('POCKETBOOK_SECRET_KEY')
+if SECRET_KEY is None:
+    SECRET_KEY = security_section.get('SECRET_KEY')
+elif 'SECRET_KEY' in security_section:
+    print(
+        'Ignore SECRET_KEY from the configuration',
+        'file because `POCKETBOOK_SECRET_KEY`',
+        'environment variable is provided',
+        file=sys.stderr,
+    )
 assert isinstance(SECRET_KEY, str)
 
 # SECURITY WARNING: don't run with debug turned
