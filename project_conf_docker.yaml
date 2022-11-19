@@ -1,0 +1,57 @@
+databases:
+  default:
+    ENGINE: django.db.backends.mysql
+    HOST: "mysql"
+    NAME: pocketbook
+    PASSWORD: pocketbook
+    USER: pocketbook
+    PORT: "3306"
+    TEST:
+      NAME: pocketbook_test
+security:
+  ALLOWED_HOSTS:
+    - localhost
+  INTERNAL_IPS:
+    - 127.0.0.1
+  DEBUG: true
+static:
+  MEDIA_ROOT: /pocketbook/media
+  MEDIA_URL: /media/
+  STATIC_ROOT: /pocketbook/static
+  STATIC_URL: /static/
+internationalization:
+  LANGUAGE_CODE: en-us
+  TIME_ZONE: Europe/Volgograd
+  USE_I18N: true
+  USE_L10N: true
+  USE_TZ: true
+custom:
+  WAIT_DB_TIMEOUT: 10
+logging:
+  version: 1
+  disable_existing_loggers: False
+  loggers:
+    '':
+      handlers: ['console']
+      level: DEBUG
+      propagate: True
+    uvicorn:
+      level: DEBUG
+    django.db:
+      handlers: ['file']
+      level: DEBUG
+  handlers:
+    console:
+      class: logging.StreamHandler
+      level: DEBUG
+      formatter: text
+    file:
+      class: logging.FileHandler
+      level: DEBUG
+      formatter: text
+      filename: /pocketbook/pocketbook.log
+      mode: 'at'
+  formatters:
+    text:
+      '()': logging.Formatter
+      format: '%(asctime)s [%(levelname)-7s] %(name)s: %(message)s'

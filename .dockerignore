@@ -11,5 +11,3 @@ project_conf.yaml
 mysql-datadir/*
 postgres-datadir/*
 pocketbook.log
-.env
-docker-compose.override.yaml

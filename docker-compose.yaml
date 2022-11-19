@@ -1,9 +1,54 @@
 version: '3.3'
 
 services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    command: "python3 manage.py runserver 0.0.0.0:8000"
+    depends_on:
+      - mysql
+    environment:
+      POCKETBOOK_CONF: "/pocketbook/project_conf_docker.yaml"
+
+      # You can override this value with `docker-compose.override.yaml`
+      POCKETBOOK_SECRET_KEY: your-secret-key
+    volumes:
+      - '.:/pocketbook'
+  tests:
+    build:
+      context: .
+      dockerfile: tests.Dockerfile
+    command: 'python3 -m pytest -vv tests'
+    depends_on:
+      - mysql
+    environment:
+      POCKETBOOK_CONF: "/pocketbook/project_conf_docker.yaml"
+
+      # You can override this value with `docker-compose.override.yaml`
+      POCKETBOOK_SECRET_KEY: your-secret-key
+    volumes:
+      - '.:/pocketbook'
+  coverage:
+    build:
+      context: .
+      dockerfile: tests.Dockerfile
+    command: bash -c "coverage run --source=core,main,sugar -m pytest -vv tests && coverage html"
+    depends_on:
+      - mysql
+    environment:
+      POCKETBOOK_CONF: "/pocketbook/project_conf_docker.yaml"
+
+      # You can override this value with `docker-compose.override.yaml`
+      POCKETBOOK_SECRET_KEY: your-secret-key
+    volumes:
+      - '.:/pocketbook'
   mysql:
     image: "mysql:5.7.34"
     environment:
+      # You can override this value with `docker-compose.override.yaml`
       MYSQL_RANDOM_ROOT_PASSWORD: "yes"
       MYSQL_USER: pocketbook
       MYSQL_PASSWORD: pocketbook

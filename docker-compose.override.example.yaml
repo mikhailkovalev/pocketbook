@@ -1,0 +1,13 @@
+version: '3.3'
+
+services:
+  app:
+    environment:
+      POCKETBOOK_SECRET_KEY: real-secret-key
+  tests:
+    command: python3 -m pytest -vv tests.custom_test_file.py::custom_test
+    environment:
+      POCKETBOOK_SECRET_KEY: real-secret-key
+  coverage:
+    environment:
+      POCKETBOOK_SECRET_KEY: real-secret-key
