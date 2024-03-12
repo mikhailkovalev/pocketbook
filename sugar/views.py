@@ -89,6 +89,9 @@ def rows_view(request, *args, **kwargs):
 
     records = Record.objects.filter(
         who=request.user.id,
+    ).order_by(
+        'who',
+        '-when',
     ).annotate(
         time_label=Trunc(
             expression='when',
