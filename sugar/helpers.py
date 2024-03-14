@@ -1,6 +1,4 @@
 import calendar
-import operator
-import typing
 from bisect import (
     bisect_right,
 )
@@ -41,8 +39,6 @@ from typing import (
     Union,
 )
 
-import numpy
-import scipy.integrate
 from django.conf import (
     settings,
 )
@@ -57,6 +53,7 @@ from django.db.models.functions import (
 from pytz import (
     timezone,
 )
+from core import helpers
 from sugar.enums import (
     DateAggregateEnum,
 )
@@ -494,7 +491,7 @@ def _interpolate_meterings(
         )),
     )))[:-1]
 
-    ext_values = numpy.interp(  # fixme
+    ext_values = helpers.numpy_interp(
         ext_moments,
         stored_moments,
         stored_values,
@@ -644,7 +641,7 @@ def _get_groupped_sugar_display_data(
         ext_moments_slice = ext_moments[ext_start:ext_stop+1]
         ext_values_slice = ext_values[ext_start:ext_stop+1]
 
-        integrated_value = scipy.integrate.trapz(  # fixme
+        integrated_value = helpers.scipy_integrate_trapz(
             ext_values_slice,
             ext_moments_slice,
         )

@@ -226,3 +226,32 @@ def test_numpy_interp(kwargs, expected_result):
     assert len(actual_result) == len(expected_result)
     for idx, (actual_item, expected_item) in enumerate(zip(actual_result, expected_result)):
         assert abs(actual_item - expected_item) < 1e-8, f'idx={idx}: actual={actual_item}, expected={expected_item}'
+
+
+@pytest.mark.parametrize(
+    ['args', 'values', 'expected_result'],
+    [
+        [
+            [0, 1],
+            [0, 1],
+            0.5,
+        ],
+        [
+            [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
+            [10, 5, 3.33, 2.5, 2, 1.67, 1.43, 1.25, 1.11],
+            2.2735,
+        ],
+        [
+            [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1],
+            [0, 0.01, 0.04, 0.09, 0.16, 0.25, 0.36, 0.49, 0.64, 0.81, 1],
+            0.335,
+        ],
+        [
+            [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1],
+            [0, 0.01, 0.04, 0.09, 0.16, 0.25, 0.36, 0.49, 0.64, 0.81, 1],
+            0.335,
+        ],
+    ],
+)
+def test_scipy_integrate_trapz(args, values, expected_result):
+    assert abs(helpers.scipy_integrate_trapz(values, args) - expected_result) < 1e-8

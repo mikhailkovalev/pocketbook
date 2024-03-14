@@ -175,3 +175,9 @@ def numpy_interp(
 
     return dest_values
 
+
+def scipy_integrate_trapz(values, args):
+    double_result = 0
+    for (prev_arg, prev_value), (arg, value) in iter_pairs(zip(args, values)):
+        double_result += (arg - prev_arg) * (value + prev_value)
+    return double_result / 2
