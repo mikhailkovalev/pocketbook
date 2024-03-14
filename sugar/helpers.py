@@ -39,8 +39,6 @@ from typing import (
     Union,
 )
 
-import numpy
-import scipy.integrate
 from django.conf import (
     settings,
 )
@@ -55,6 +53,7 @@ from django.db.models.functions import (
 from pytz import (
     timezone,
 )
+from core import helpers
 from sugar.enums import (
     DateAggregateEnum,
 )
@@ -492,7 +491,7 @@ def _interpolate_meterings(
         )),
     )))[:-1]
 
-    ext_values = numpy.interp(
+    ext_values = helpers.numpy_interp(
         ext_moments,
         stored_moments,
         stored_values,
@@ -642,7 +641,7 @@ def _get_groupped_sugar_display_data(
         ext_moments_slice = ext_moments[ext_start:ext_stop+1]
         ext_values_slice = ext_values[ext_start:ext_stop+1]
 
-        integrated_value = scipy.integrate.trapz(
+        integrated_value = helpers.scipy_integrate_trapz(
             ext_values_slice,
             ext_moments_slice,
         )
@@ -830,167 +829,6 @@ class TrapezoidalSugarAverager(ISugarAverager):
             factor: float = (float_curr_point_value - float(prev_point.value)) / (float_curr_point_when - prev_point.when.timestamp())
             offset: float = float_curr_point_value - factor*float_curr_point_when
             self._coeffs[idx] = (offset, factor)
-
-    def _determine_chunk_idx(self, unix_when: float) -> int:
-        assert self._prepared
-        assert self._unix_stamps
-        chunk_idx = -1 + bisect_right(
-            self._unix_stamps,
-            unix_when,
-        )
-        return chunk_idx
-
-
-class TrapezoidalScipySugarAverager(ISugarAverager):
-
-    def __init__(self) -> None:
-        self._meterings: List[SugarMeteringTuple] = []
-        self._prepared: bool = True
-        self._coeffs: Dict[int, Tuple[float, float]] = {}
-        self._unix_stamps: Optional[List[float]] = None
-
-    def add_metering(self, metering: SugarMeteringTuple) -> None:
-        self._meterings.append(metering)
-        self._prepared = False
-
-    def get_value(self, when: Union[datetime, float], chunk_idx: Optional[int] = None, force: bool = False) -> float:
-        self._prepare()
-
-        unix_when: float
-        if isinstance(when, datetime):
-            unix_when = when.timestamp()
-        else:
-            unix_when = when
-
-        if chunk_idx is None:
-            chunk_idx = self._determine_chunk_idx(unix_when)
-
-        if not force:
-            inside_chunk = (
-                0 <= chunk_idx < len(self._coeffs)
-                and self._unix_stamps[chunk_idx] - self.STAMPS_EPSILON <= unix_when <= self._unix_stamps[1 + chunk_idx] + self.STAMPS_EPSILON
-            ) or (
-                chunk_idx == len(self._coeffs)
-                and abs(unix_when - self._unix_stamps[-1]) < self.STAMPS_EPSILON
-            )
-            if not inside_chunk:
-                raise ValueError
-
-    def _get_value(self, timestamp: float, chunk_idx: int):
-        assert self._prepared
-        coeffs = self._coeffs.get(chunk_idx)
-        if coeffs is None:
-            self._calculate_coeffs(chunk_idx)
-            coeffs = self._coeffs[chunk_idx]
-        scale, offset = coeffs
-        return scale*timestamp + offset
-
-    def _calculate_coeffs(self, chunk_idx: int):
-        assert self._prepared
-        assert 0 <= chunk_idx < len(self._meterings)-1
-
-        float_curr_value = float(self._meterings[chunk_idx].value)
-        curr_timestamp = self._unix_stamps[chunk_idx]
-        scale = (float_curr_value - float(self._meterings[chunk_idx+1].value)) / (curr_timestamp - self._unix_stamps[chunk_idx+1])
-        offset = float_curr_value - scale*curr_timestamp
-        self._coeffs[chunk_idx] = (scale, offset)
-
-    def get_avg(self, begin: datetime, end: datetime) -> float:
-        self._prepare()
-
-        if begin > end:
-            tmp = begin
-            begin = end
-            end = tmp
-
-        begin_timestamp: float = begin.timestamp()
-        end_timestamp: float = end.timestamp()
-
-        begin_chunk_idx: int = 0
-        end_chunk_idx: int = len(self._meterings)-1
-        first_interpolated: Optional[Tuple[float, float]] = None
-        last_interpolated: Optional[Tuple[float, float]] = None
-
-        if begin_timestamp > self._meterings[0].when.timestamp():
-            # todo: use bisect
-            begin_chunk_idx = self._determine_chunk_idx(
-                begin_timestamp,
-            )
-            first_interpolated = self.get_value(
-                begin_timestamp,
-                begin_chunk_idx,
-            )
-
-            # first_interpolated = (
-            #     begin_timestamp,
-            #     numpy.interp(
-            #         begin_timestamp,
-            #         (
-            #             self._meterings[begin_chunk_idx-1].when.timestamp(),
-            #             self._meterings[begin_chunk_idx].when.timestamp(),
-            #         ),
-            #         (
-            #             float(self._meterings[begin_chunk_idx-1].value),
-            #             float(self._meterings[begin_chunk_idx].value),
-            #         ),
-            #     )
-            # )
-
-        if end_timestamp < self._meterings[-1].when.timestamp():
-            # todo: use bisect
-            end_chunk_idx = next(
-                idx
-                for idx, (when, value) in enumerate(self._meterings)
-                if when.timestamp() >= end_timestamp
-            )
-            last_interpolated = (
-                end_timestamp,
-                numpy.interp(
-                    end_timestamp,
-                    (
-                        self._meterings[end_chunk_idx-1].when.timestamp(),
-                        self._meterings[end_chunk_idx].when.timestamp(),
-                    ),
-                    (
-                        float(self._meterings[end_chunk_idx-1].value),
-                        float(self._meterings[end_chunk_idx].value),
-                    ),
-                )
-            )
-
-        pairs_iterator: Iterator[Tuple[float, float]]
-        pairs_iterator = filter(None, chain(
-            (
-                first_interpolated,
-            ),
-            (
-                (when.timestamp(), float(value))
-                for when, value in islice(
-                    self._meterings,
-                    begin_chunk_idx,
-                    1+end_chunk_idx,
-                )
-            ),
-            (
-                last_interpolated,
-            ),
-        ))
-
-        args, values = zip(*pairs_iterator)
-
-        return scipy.integrate.trapz(values, args) / (args[-1] - args[0])
-
-    def _prepare(self) -> None:
-        if not self._prepared:
-            self._meterings.sort(
-                key=attrgetter('when'),
-            )
-            self._unix_stamps = [
-                metering.when.timestamp()
-                for metering in self._meterings
-            ]
-            self._coeffs.clear()
-            self._prepared = True
 
     def _determine_chunk_idx(self, unix_when: float) -> int:
         assert self._prepared
