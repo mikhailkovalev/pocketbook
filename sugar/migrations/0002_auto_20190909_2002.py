@@ -25,8 +25,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterModelOptions(
             name='record',
-            options={'ordering': ('who', '-when'),
-                     'verbose_name': 'Запись дневника сахаров',
+            options={'verbose_name': 'Запись дневника сахаров',
                      'verbose_name_plural': 'Записи дневника сахаров'},
         ),
         migrations.AddField(
