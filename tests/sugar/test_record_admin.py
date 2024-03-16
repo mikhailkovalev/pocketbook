@@ -14,9 +14,18 @@ from lxml import (
     etree,
 )
 
+pytestmark = [
+    pytest.mark.parametrize(
+        'db_data_base_dir',
+        ['test_record_admin'],
+        indirect=True,
+    ),
+]
+
 
 def test_add_record(
         create_client,
+        db_data_base_dir,
         admin,
 ):
     url = '/admin/sugar/record/add/'
@@ -153,46 +162,20 @@ def test_add_record(
     )
 
 
+@pytest.mark.parametrize(
+    'db_data',
+    ['test_records_list_ownership.yml'],
+    indirect=True,
+)
 def test_records_list_ownership(
         create_client,
-        create_datetime,
-        create_record,
-        create_user,
-        admin,
+        db_data: dict,
+        db_data_base_dir,
 ):
-    admin2 = create_user(
-        username='admin2',
-        is_staff=True,
-        is_superuser=True,
-    )
+    admin = db_data['users']['admin']
+    admin2 = db_data['users']['admin2']
 
-    data = [
-        dict(
-            whose=admin,
-            when=create_datetime('2021-05-16T10:00:00'),
-        ),
-        dict(
-            whose=admin,
-            when=create_datetime('2021-05-16T11:00:00'),
-        ),
-        dict(
-            whose=admin,
-            when=create_datetime('2021-05-16T12:00:00'),
-        ),
-        dict(
-            whose=admin2,
-            when=create_datetime('2021-05-16T10:30:00'),
-        ),
-        dict(
-            whose=admin2,
-            when=create_datetime('2021-05-16T11:30:00'),
-        ),
-    ]
-
-    for kw in data:
-        create_record(**kw)
-
-    etree_html_parser = etree.HTMLParser()
+    etree_html_parser = etree.HTMLParser()  # fixme: fixture?
     search_equation = '//table[@id="result_list"]/tbody/tr/th/a/text()'
 
     def check_response(
@@ -235,6 +218,7 @@ def test_records_list_display_basic(
         create_datetime,
         create_record,
         admin,
+        db_data_base_dir,
 ):
     create_record(
         whose=admin,
@@ -306,7 +290,8 @@ def test_change_display_basic(
         create_client,
         create_datetime,
         create_record,
-        admin
+        admin,
+        db_data_base_dir,
 ):
     record = create_record(
         whose=admin,
@@ -478,6 +463,7 @@ def test_multiple_meterings(
         create_datetime,
         create_record,
         create_sugar_metering,
+        db_data_base_dir,
 ):
     record = create_record()
     create_sugar_metering(
@@ -496,6 +482,7 @@ def test_multiple_meals_list_view(
         create_client,
         create_record,
         admin,
+        db_data_base_dir,
 ):
     create_record(
         meal_params_list=(
@@ -533,6 +520,7 @@ def test_multiple_meals_change_view(
         create_client,
         create_record,
         admin,
+        db_data_base_dir,
 ):
     record = create_record(
         meal_params_list=(
@@ -598,6 +586,7 @@ def test_multiple_injections_list_view(
         create_insulin_syringe,
         create_record,
         admin,
+        db_data_base_dir,
 ):
     foo_insulin_kind = create_insulin_kind(name='Foo')
     bar_insulin_kind = create_insulin_kind(name='Bar')
@@ -674,6 +663,7 @@ def test_multiple_injections_change_view(
         create_insulin_syringe,
         create_record,
         admin,
+        db_data_base_dir,
 ):
     foo_insulin_kind = create_insulin_kind(name='Foo')
     bar_insulin_kind = create_insulin_kind(name='Bar')
@@ -764,6 +754,7 @@ def test_multiple_comments(
         create_client,
         create_record,
         admin,
+        db_data_base_dir,
 ):
     create_record(
         comments_params_list=(
@@ -796,6 +787,7 @@ def test_long_comment(
         create_client,
         create_record,
         admin,
+        db_data_base_dir,
 ):
     create_record(
         comments_params_list=(
@@ -829,6 +821,7 @@ def test_actuality_for_new(
         create_test_strip_pack,
         admin,
         tz,
+        db_data_base_dir,
 ):
     create_test_strip_pack(  # expired pack
         whose=admin,
@@ -962,6 +955,7 @@ def test_actuality_for_edit(
         create_test_strip_pack,
         create_record,
         admin,
+        db_data_base_dir,
 ):
     create_test_strip_pack(  # actual pack
         whose=admin,

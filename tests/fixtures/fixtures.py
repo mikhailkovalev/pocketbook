@@ -1,3 +1,4 @@
+import itertools
 import logging
 import os.path
 from datetime import (
@@ -13,12 +14,14 @@ from typing import (
     TYPE_CHECKING,
 )
 
+import dirty_equals
 import pytest
 import pytz
 from _pytest.python_api import RaisesContext  # noqa
 from django.conf import (
     settings,
 )
+from django.contrib.auth.hashers import check_password
 
 if TYPE_CHECKING:
     from django.db.models import (
@@ -94,9 +97,13 @@ def assert_log_errors(caplog):
             else:
                 raise NotImplementedError
 
+        all_records_iterator = itertools.chain(
+            caplog.get_records('setup'),
+            caplog.get_records('call'),
+        )
         error_records = [
             record
-            for record in caplog.records
+            for record in all_records_iterator
             if record.levelno >= logging.ERROR
         ]
 

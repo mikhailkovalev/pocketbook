@@ -1,6 +1,7 @@
+import logging
+import pathlib
 from datetime import (
     date,
-    datetime,
 )
 from decimal import (
     Decimal,
@@ -10,10 +11,7 @@ from typing import (
 )
 
 import pytest
-import pytz
-from django.conf import (
-    settings,
-)
+import yaml
 
 from sugar.models import (
     Comment,
@@ -25,6 +23,9 @@ from sugar.models import (
     SugarMetering,
     TestStripPack,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 @pytest.fixture
@@ -200,7 +201,6 @@ def create_sugar_metering(
 
 @pytest.fixture
 def create_record(
-        admin,
         create_datetime,
         create_meal,
         create_sugar_metering,
@@ -208,7 +208,7 @@ def create_record(
         create_comment,
 ):
     def _create_record(
-            whose=admin,
+            whose,
             when=None,
             meal_params_list=(),
             metering_params=None,
@@ -245,3 +245,61 @@ def create_record(
         return record
 
     return _create_record
+
+
+@pytest.fixture
+def db_data_base_dir(request, resources):
+    """
+    Base directory for db data
+    """
+    _db_data_base_dir = pathlib.Path(resources) / 'sugar' / 'db_data'
+    try:
+        _db_data_base_dir /= request.param
+    except AttributeError:
+        pass
+
+    return _db_data_base_dir
+
+
+@pytest.fixture
+def db_data(
+        request,
+        transactional_db,
+
+        create_record,
+        create_user,
+
+        db_data_base_dir,
+):
+    file_path = db_data_base_dir / request.param
+
+    with open(file_path, 'rt', encoding='utf-8') as f:
+        db_data_params = yaml.load(f, Loader=yaml.FullLoader)
+
+    _db_data = {}
+
+    default_user = None
+    _db_data['users'] = users = {}
+    users_params = db_data_params.get('users') or {}
+    for username, kwargs in users_params.items():
+        is_default = kwargs.pop('default', False)
+        users[username] = user = create_user(username, **kwargs)
+        if is_default:
+            if default_user is not None:
+                logger.error('Multiple default users!')
+            default_user = user
+
+    _db_data['records'] = records = []
+    records_params = db_data_params.get('records') or []
+    for record_params in records_params:
+        try:
+            username = record_params['whose']
+        except KeyError:
+            record_params['whose'] = default_user
+        else:
+            record_params['whose'] = users[username]
+
+        record = create_record(**record_params)
+        records.append(record)
+
+    return _db_data

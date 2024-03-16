@@ -1,0 +1,7 @@
+users:
+  admin:
+    default: true
+  admin2:
+    default: true
+  admin3:
+    default: true

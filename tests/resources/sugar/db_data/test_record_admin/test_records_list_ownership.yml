@@ -1,0 +1,19 @@
+users:
+  admin:
+    default: true
+    is_staff: true
+    is_superuser: true
+  admin2:
+    is_staff: true
+    is_superuser: true
+records:
+  - whose: admin
+    when: "2021-05-16T10:00:00"
+  - whose: admin
+    when: "2021-05-16T11:00:00"
+  - whose: admin
+    when: "2021-05-16T12:00:00"
+  - whose: admin2
+    when: "2021-05-16T10:30:00"
+  - whose: admin2
+    when: "2021-05-16T11:30:00"
