@@ -1,9 +1,11 @@
 users:
   admin:
+    id: 1
     default: true
     is_staff: true
     is_superuser: true
   admin2:
+    id: 2
     is_staff: false
     is_superuser: false
 records:

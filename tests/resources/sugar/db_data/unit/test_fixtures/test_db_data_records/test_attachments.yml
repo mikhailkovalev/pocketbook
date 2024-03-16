@@ -1,0 +1,22 @@
+users:
+  admin:
+    id: 1
+    default: true
+    is_staff: true
+
+records:
+  - id: 2
+    when: "2024-03-16T10:00:00"
+    metering_params:
+      sugar_level: "4.8"
+    meal_params_list:
+      - food_quantity: "1.0"
+      - food_quantity: "1.1"
+        description: foo
+  - id: 3
+    when: "2024-03-16T10:01:00"
+    metering_params:
+      sugar_level: "5.2"
+    injection_params_list:
+      - insulin_quantity: 5
+      - insulin_quantity: 6

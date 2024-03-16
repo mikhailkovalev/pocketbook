@@ -214,14 +214,16 @@ def create_record(
             metering_params=None,
             injection_params_list=(),
             comments_params_list=(),
+            id=None,
     ):
 
         if when is None:
             when = create_datetime('2021-05-10T13:15:00')
 
         record = Record.objects.create(
+            **({'id': id} if id is not None else {}),
             who=whose,
-            when=when,
+            when=when,  # todo: wrap to create_datetime?
         )
 
         if metering_params is not None:
@@ -261,6 +263,8 @@ def db_data_base_dir(request, resources):
     return _db_data_base_dir
 
 
+# fixme: вместо передачи имени файла через request.param
+#  можно завести фикстуру а-ля db_data_path
 @pytest.fixture
 def db_data(
         request,
