@@ -1,0 +1,8 @@
+- model: auth.User
+  username: admin
+  is_staff: true
+  is_superuser: false
+- model: auth.User
+  username: admin2
+  password: custom
+  is_active: false

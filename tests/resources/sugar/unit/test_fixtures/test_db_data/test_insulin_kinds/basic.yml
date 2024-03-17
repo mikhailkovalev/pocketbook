@@ -1,0 +1,4 @@
+- model: sugar.InsulinKind
+  name: TestInsulinKind1
+- model: sugar.InsulinKind
+  name: TestInsulinKind2

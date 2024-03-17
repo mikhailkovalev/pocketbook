@@ -1,0 +1,27 @@
+# region users
+- model: auth.User
+  id: 1
+  username: admin
+- model: auth.User
+  id: 2
+  username: admin2
+# endregion
+
+# region packs
+- model: sugar.TestStripPack
+  whose_id: 1
+  volume: 50
+  opening: "2024-03-01"
+  expiry_plan: "2024-03-07"
+  expiry_actual: "2024-03-10"
+- model: sugar.TestStripPack
+  whose_id: 2
+  volume: 25
+  opening: "2024-02-29"
+  expiry_plan: "2024-03-06"
+- model: sugar.TestStripPack
+  whose_id: 1
+  volume: 50
+  opening: "2024-03-10"
+  expiry_plan: "2024-03-17"
+# endregion

@@ -1,0 +1,46 @@
+# region users
+- model: auth.User
+  id: 1
+  username: admin
+- model: auth.User
+  id: 2
+  username: admin2
+# endregion
+
+# region insulin_kinds
+- model: sugar.InsulinKind
+  id: 3
+  name: Test1
+- model: sugar.InsulinKind
+  id: 4
+  name: Test2
+# endregion
+
+# region insulin_syringes
+- model: sugar.InsulinSyringe
+  insulin_mark_id: 3
+  whose_id: 1
+  volume: 300
+  opening: "2024-03-01"
+  expiry_plan: "2024-03-15"
+  expiry_actual: "2024-03-15"
+- model: sugar.InsulinSyringe
+  insulin_mark_id: 3
+  whose_id: 2
+  volume: 300
+  opening: "2024-03-02"
+  expiry_plan: "2024-03-17"
+- model: sugar.InsulinSyringe
+  insulin_mark_id: 4
+  whose_id: 1
+  volume: 450
+  opening: "2024-03-03"
+  expiry_plan: "2024-03-25"
+  expiry_actual: "2024-03-23"
+- model: sugar.InsulinSyringe
+  insulin_mark_id: 3
+  whose_id: 1
+  volume: 300
+  opening: "2024-03-15"
+  expiry_plan: "2024-03-29"
+# endregion

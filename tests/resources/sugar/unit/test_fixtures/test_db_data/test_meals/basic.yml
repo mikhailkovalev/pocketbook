@@ -1,0 +1,34 @@
+# region users
+- model: auth.User
+  id: 1
+  username: admin
+# endregion
+
+# region records
+- model: sugar.Record
+  id: 2
+  who_id: 1
+  when: "2024-03-15T10:00:00.000"
+- model: sugar.Record
+  id: 3
+  who_id: 1
+  when: "2024-03-15T22:00:00.000"
+# endregion
+
+# region meals
+- model: sugar.Meal
+  record_id: 2
+  food_quantity: "5.1"
+- model: sugar.Meal
+  record_id: 2
+  food_quantity: "0.9"
+  description: Test1
+- model: sugar.Meal
+  record_id: 3
+  food_quantity: "2.3"
+  description: Test2
+- model: sugar.Meal
+  record_id: 3
+  food_quantity: 3
+  description: Test3
+# endregion

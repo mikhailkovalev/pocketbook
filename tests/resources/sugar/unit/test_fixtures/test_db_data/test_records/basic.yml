@@ -1,0 +1,20 @@
+# region users
+- model: auth.User
+  id: 1
+  username: admin
+- model: auth.User
+  id: 2
+  username: admin2
+# endregion
+
+# region records
+- model: sugar.Record
+  who_id: 1
+  when: "2023-03-17T10:00:00.000"
+- model: sugar.Record
+  who_id: 2
+  when: "2023-03-17T10:30:00.000"
+- model: sugar.Record
+  who_id: 1
+  when: "2023-03-17T11:00:00.000"
+# endregion

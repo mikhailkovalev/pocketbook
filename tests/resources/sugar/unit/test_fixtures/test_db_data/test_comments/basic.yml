@@ -1,0 +1,28 @@
+# region users
+- model: auth.User
+  id: 1
+  username: admin
+# endregion
+
+# region records
+- model: sugar.Record
+  id: 2
+  who_id: 1
+  when: "2024-03-10T10:00:00.000"
+- model: sugar.Record
+  id: 3
+  who_id: 1
+  when: "2024-03-10T22:00:00.000"
+# endregion
+
+# region comments
+- model: sugar.Comment
+  record_id: 2
+  content: 'Foo'
+- model: sugar.Comment
+  record_id: 2
+  content: 'Bar'
+- model: sugar.Comment
+  record_id: 3
+  content: 'Buz'
+# endregion

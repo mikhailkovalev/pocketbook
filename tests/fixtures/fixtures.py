@@ -1,6 +1,7 @@
 import itertools
 import logging
 import os.path
+import pathlib
 from datetime import (
     datetime,
 )
@@ -11,17 +12,18 @@ from typing import (
     Any,
     Callable,
     Dict,
+    List,
     TYPE_CHECKING,
 )
 
-import dirty_equals
 import pytest
 import pytz
+import yaml
 from _pytest.python_api import RaisesContext  # noqa
+from django.apps import apps
 from django.conf import (
     settings,
 )
-from django.contrib.auth.hashers import check_password
 
 if TYPE_CHECKING:
     from django.db.models import (
@@ -132,3 +134,39 @@ def test_exception():
         pass
 
     return TestException
+
+
+@pytest.fixture
+def db_data_base_dir():
+    raise NotImplementedError
+
+
+@pytest.fixture
+def db_data_filename() -> str:
+    raise NotImplementedError  # должно переопределяться
+
+
+@pytest.fixture
+def db_data_path(db_data_base_dir: pathlib.Path, db_data_filename: str, resources) -> pathlib.Path:
+    return pathlib.Path(resources) / db_data_base_dir / db_data_filename
+
+
+@pytest.fixture
+def db_data_raw(db_data_path: pathlib.Path) -> List[Dict[str, Any]]:
+    with open(db_data_path, 'rt', encoding='utf-8') as db_data_file:
+        return yaml.load(db_data_file, Loader=yaml.FullLoader)
+
+
+@pytest.fixture
+def db_data_constructors(create_user) -> Dict[str, Callable]:
+    return {
+        settings.AUTH_USER_MODEL: create_user,
+    }
+
+
+@pytest.fixture
+def db_data(transactional_db, db_data_raw: List[Dict[str, Any]], db_data_constructors):
+    for obj_raw in db_data_raw:
+        model_name = obj_raw.pop('model')
+        constructor = db_data_constructors.get(model_name, apps.get_model(model_name).objects.create)
+        constructor(**obj_raw)

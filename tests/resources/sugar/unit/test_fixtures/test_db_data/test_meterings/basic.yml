@@ -1,0 +1,43 @@
+# region users
+- model: auth.User
+  id: 1
+  username: admin
+# endregion
+
+# region packs
+- model: sugar.TestStripPack
+  id: 2
+  whose_id: 1
+  volume: 50
+  opening: "2024-03-01"
+  expiry_plan: "2024-03-07"
+  expiry_actual: "2024-03-10"
+- model: sugar.TestStripPack
+  id: 3
+  whose_id: 1
+  volume: 50
+  opening: "2024-03-10"
+  expiry_plan: "2024-03-17"
+# endregion
+
+# region records
+- model: sugar.Record
+  id: 4
+  who_id: 1
+  when: "2024-03-10T10:00:00.000"
+- model: sugar.Record
+  id: 5
+  who_id: 1
+  when: "2024-03-10T22:00:00.000"
+# endregion
+
+# region meterings
+- model: sugar.SugarMetering
+  record_id: 4
+  pack_id: 2
+  sugar_level: "4.8"
+- model: sugar.SugarMetering
+  record_id: 5
+  pack_id: 3
+  sugar_level: "6.5"
+# endregion

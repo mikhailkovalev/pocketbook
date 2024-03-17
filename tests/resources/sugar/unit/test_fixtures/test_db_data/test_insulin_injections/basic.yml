@@ -1,0 +1,69 @@
+# region users
+- model: auth.User
+  id: 1
+  username: admin
+# endregion
+
+# region insulin_kinds
+- model: sugar.InsulinKind
+  id: 2
+  name: Test1
+- model: sugar.InsulinKind
+  id: 3
+  name: Test2
+# endregion
+
+# region insulin_syringes
+- model: sugar.InsulinSyringe
+  id: 4
+  insulin_mark_id: 2
+  whose_id: 1
+  volume: 300
+  opening: "2024-03-01"
+  expiry_plan: "2024-03-15"
+  expiry_actual: "2024-03-15"
+- model: sugar.InsulinSyringe
+  id: 5
+  insulin_mark_id: 2
+  whose_id: 1
+  volume: 300
+  opening: "2024-03-15"
+  expiry_plan: "2024-03-29"
+- model: sugar.InsulinSyringe
+  id: 6
+  insulin_mark_id: 3
+  whose_id: 1
+  volume: 450
+  opening: "2024-03-05"
+  expiry_plan: "2024-03-19"
+# endregion
+
+# region records
+- model: sugar.Record
+  id: 7
+  who_id: 1
+  when: "2024-03-15T10:00:00.000"
+- model: sugar.Record
+  id: 8
+  who_id: 1
+  when: "2024-03-15T22:00:00.000"
+# endregion
+
+# region insulin_injections
+- model: sugar.InsulinInjection
+  record_id: 7
+  insulin_syringe_id: 4
+  insulin_quantity: 4
+- model: sugar.InsulinInjection
+  record_id: 7
+  insulin_syringe_id: 5
+  insulin_quantity: 2
+- model: sugar.InsulinInjection
+  record_id: 8
+  insulin_syringe_id: 5
+  insulin_quantity: 6
+- model: sugar.InsulinInjection
+  record_id: 8
+  insulin_syringe_id: 6
+  insulin_quantity: 20
+# endregion
