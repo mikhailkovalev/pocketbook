@@ -7,12 +7,10 @@ from django.contrib.auth.models import User
 
 from core import test_helpers
 
-
-@pytest.mark.parametrize('db_data_base_dir', [pathlib.Path('core', 'unit', 'test_fixtures', 'test_db_data', 'test_users')])
-@pytest.mark.parametrize(
+test_users = pytest.mark.parametrize(
     [
         'db_data_filename',
-        'expected_users_data',
+        'expected_objs_data',
     ],
     [
         [
@@ -47,18 +45,11 @@ from core import test_helpers
             ],
         ],
     ],
+)(
+    pytest.mark.parametrize(
+        'db_data_base_dir',
+        [pathlib.Path('core', 'unit', 'test_fixtures', 'test_db_data', 'test_users')],
+    )(
+        test_helpers.test_db_objs(User, ('username',)),
+    )
 )
-def test_users(
-        db_data,
-        expected_users_data,
-        model_to_dict,
-):
-    actual_users = User.objects.order_by('username')
-    assert len(actual_users) == len(expected_users_data)
-    for idx, (actual_user, expected_user_data) in enumerate(
-        zip(actual_users, expected_users_data),
-    ):
-        actual_user_data = model_to_dict(actual_user)
-        assert sorted(actual_user_data) == sorted(expected_user_data)
-        for field_name, actual_value in actual_user_data.items():
-            assert actual_value == expected_user_data[field_name], f'idx={idx!r}; field_name={field_name!r}'

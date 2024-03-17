@@ -11,25 +11,6 @@ from core import test_helpers
 from sugar.models import Record, SugarMetering, Meal, InsulinInjection, TestStripPack, InsulinKind, InsulinSyringe, Comment
 
 
-def _test_db_objs(
-    model: Type[Model],
-    ordering: Sequence[str],
-):
-    def __test_db_objs(db_data, db_data_filename, expected_objs_data, model_to_dict):
-        actual_objs = model.objects.order_by(*ordering)
-        assert len(actual_objs) == len(expected_objs_data)
-        for idx, (actual_obj, expected_obj_data) in enumerate(
-            zip(actual_objs, expected_objs_data),
-        ):
-            actual_obj_data = model_to_dict(actual_obj)
-            assert sorted(actual_obj_data) == sorted(expected_obj_data)
-            for field_name, actual_value in actual_obj_data.items():
-                assert actual_value == expected_obj_data[field_name], \
-                    f'idx={idx!r}; field_name={field_name!r}'
-
-    return __test_db_objs
-
-
 test_records = pytest.mark.parametrize(
     [
         'db_data_filename',
@@ -62,7 +43,7 @@ test_records = pytest.mark.parametrize(
         'db_data_base_dir',
         [pathlib.Path('sugar', 'unit', 'test_fixtures', 'test_db_data', 'test_records')],
     )(
-        _test_db_objs(Record, ('who', '-when')),
+        test_helpers.test_db_objs(Record, ('who', '-when')),
     )
 )
 
@@ -107,7 +88,7 @@ test_packs = pytest.mark.parametrize(
         'db_data_base_dir',
         [pathlib.Path('sugar', 'unit', 'test_fixtures', 'test_db_data', 'test_packs')],
     )(
-        _test_db_objs(TestStripPack, ('whose', '-opening')),
+        test_helpers.test_db_objs(TestStripPack, ('whose', '-opening')),
     )
 )
 
@@ -140,7 +121,7 @@ test_meterings = pytest.mark.parametrize(
         'db_data_base_dir',
         [pathlib.Path('sugar', 'unit', 'test_fixtures', 'test_db_data', 'test_meterings')],
     )(
-        _test_db_objs(SugarMetering, ('record__who_id', '-record__when')),
+        test_helpers.test_db_objs(SugarMetering, ('record__who_id', '-record__when')),
     )
 )
 
@@ -169,7 +150,7 @@ test_insulin_kinds = pytest.mark.parametrize(
         'db_data_base_dir',
         [pathlib.Path('sugar', 'unit', 'test_fixtures', 'test_db_data', 'test_insulin_kinds')],
     )(
-        _test_db_objs(InsulinKind, ('name',)),
+        test_helpers.test_db_objs(InsulinKind, ('name',)),
     )
 )
 
@@ -226,7 +207,7 @@ test_insulin_syringes = pytest.mark.parametrize(
         'db_data_base_dir',
         [pathlib.Path('sugar', 'unit', 'test_fixtures', 'test_db_data', 'test_insulin_syringes')],
     )(
-        _test_db_objs(InsulinSyringe, ('whose', '-opening')),
+        test_helpers.test_db_objs(InsulinSyringe, ('whose', '-opening')),
     )
 )
 
@@ -271,7 +252,7 @@ test_insulin_injections = pytest.mark.parametrize(
         'db_data_base_dir',
         [pathlib.Path('sugar', 'unit', 'test_fixtures', 'test_db_data', 'test_insulin_injections')],
     )(
-        _test_db_objs(InsulinInjection, ['record__who_id', '-record__when', 'insulin_quantity']),
+        test_helpers.test_db_objs(InsulinInjection, ['record__who_id', '-record__when', 'insulin_quantity']),
     )
 )
 
@@ -316,7 +297,7 @@ test_meals = pytest.mark.parametrize(
         'db_data_base_dir',
         [pathlib.Path('sugar', 'unit', 'test_fixtures', 'test_db_data', 'test_meals')],
     )(
-        _test_db_objs(Meal, ['record__who_id', '-record__when', 'food_quantity']),
+        test_helpers.test_db_objs(Meal, ['record__who_id', '-record__when', 'food_quantity']),
     )
 )
 
@@ -352,6 +333,6 @@ test_comments = pytest.mark.parametrize(
         'db_data_base_dir',
         [pathlib.Path('sugar', 'unit', 'test_fixtures', 'test_db_data', 'test_comments')],
     )(
-        _test_db_objs(Comment, ['record__who_id', '-record__when', 'content']),
+        test_helpers.test_db_objs(Comment, ['record__who_id', '-record__when', 'content']),
     )
 )
