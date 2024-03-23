@@ -1,6 +1,7 @@
 from typing import Sequence, Type
 
 import dirty_equals
+from django.conf import settings
 from django.contrib.auth.hashers import check_password
 from django.db.models import Model
 
@@ -12,6 +13,13 @@ class CheckPassword(dirty_equals.DirtyEquals):
 
     def equals(self, encoded_password: str) -> bool:
         return check_password(self._raw_password, encoded_password)
+
+
+class IsNow(dirty_equals.IsNow):
+    def __init__(self, **kwargs):
+        kwargs.setdefault('tz', settings.TIME_ZONE)
+        kwargs.setdefault('enforce_tz', False)
+        super().__init__(**kwargs)
 
 
 def test_db_objs(

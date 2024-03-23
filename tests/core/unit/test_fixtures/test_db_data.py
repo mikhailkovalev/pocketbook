@@ -1,5 +1,4 @@
 import pathlib
-from unittest.mock import ANY
 
 import dirty_equals
 import pytest
@@ -27,7 +26,7 @@ test_users = pytest.mark.parametrize(
                     'email': '',
                     'is_staff': True,
                     'is_active': True,
-                    'date_joined': ANY,  # fixme: use freezer?
+                    'date_joined': test_helpers.IsNow(),
                 },
                 {
                     'id': dirty_equals.IsPositiveInt,
@@ -40,7 +39,7 @@ test_users = pytest.mark.parametrize(
                     'email': '',
                     'is_staff': False,
                     'is_active': False,
-                    'date_joined': ANY,  # fixme: use freezer?
+                    'date_joined': test_helpers.IsNow(),
                 },
             ],
         ],
