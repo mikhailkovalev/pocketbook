@@ -1,9 +1,0 @@
-# todo: remove?
-users:
-  admin:
-    default: true
-    is_staff: true
-    is_superuser: false
-  admin2:
-    password: custom
-    is_active: false

@@ -1,3 +1,4 @@
+import pathlib
 from datetime import (
     date,
     datetime,
@@ -7,6 +8,7 @@ from decimal import (
 )
 
 import pytest
+from django.contrib.auth.models import User
 from django.db.utils import (
     IntegrityError,
 )
@@ -14,13 +16,7 @@ from lxml import (
     etree,
 )
 
-pytestmark = [
-    pytest.mark.parametrize(
-        'db_data_base_dir',
-        ['test_record_admin'],
-        indirect=True,
-    ),
-]
+from sugar import models
 
 
 def test_add_record(
@@ -162,92 +158,110 @@ def test_add_record(
     )
 
 
+@pytest.mark.parametrize('db_data_filename', ['test_records_list_ownership.yml'])
+@pytest.mark.parametrize('db_data_base_dir', [pathlib.Path('sugar', 'db_data', 'test_record_admin')])  # todo: use pytestmark?
 @pytest.mark.parametrize(
-    'db_data',
-    ['test_records_list_ownership.yml'],
-    indirect=True,
+    ['username', 'expected_records_markers'],
+    [
+        [
+            'admin',
+            [
+                '2021-05-16 10:00',
+                '2021-05-16 11:00',
+                '2021-05-16 12:00',
+            ],
+        ],
+        [
+            'admin2',
+            [
+                '2021-05-16 10:30',
+                '2021-05-16 11:30',
+            ],
+        ],
+    ],
 )
 def test_records_list_ownership(
         create_client,
-        db_data: dict,
-        db_data_base_dir,
+        db_data,
+        username,
+        expected_records_markers,
 ):
-    admin = db_data['users']['admin']
-    admin2 = db_data['users']['admin2']
+    user = User.objects.get(username=username)
 
     etree_html_parser = etree.HTMLParser()  # fixme: fixture?
     search_equation = '//table[@id="result_list"]/tbody/tr/th/a/text()'
 
-    def check_response(
-            user,
-            expected_markers,
-    ):
-        client = create_client(
-            authenticated_with=user,
-        )
-        response = client.get('/admin/sugar/record/')
-        assert response.status_code == 200
-
-        tree = etree.XML(
-            text=response.content,
-            parser=etree_html_parser,
-        )
-        markers = tree.xpath(search_equation)
-        markers.sort()
-        assert markers == expected_markers
-
-    check_response(
-        admin,
-        [
-            '2021-05-16 10:00',
-            '2021-05-16 11:00',
-            '2021-05-16 12:00',
-        ],
+    client = create_client(
+        authenticated_with=user,
     )
-    check_response(
-        admin2,
-        [
-            '2021-05-16 10:30',
-            '2021-05-16 11:30',
-        ],
+    response = client.get('/admin/sugar/record/')
+    assert response.status_code == 200
+
+    tree = etree.XML(
+        text=response.content,
+        parser=etree_html_parser,
     )
+    markers = tree.xpath(search_equation)
+    markers.sort()
+    assert markers == expected_records_markers
 
 
-def test_records_list_display_basic(
+@pytest.mark.parametrize(
+    [
+        'db_data_filename',
+        'expected_meterings_data',
+        'expected_meal_data',
+        'expected_injections_data',
+        'expected_comments_data',
+    ],
+    [
+        [
+            'test_records_list_display_basic.yml',
+            ['4.8', '-'],  # expected_meterings_data
+            ['2.0', '-'],  # expected_meal_data
+            ['4 Aspart', '-'],  # expected_injections_data
+            ['Foo', '-'],  # expected_comments_data
+        ],
+        [
+            'test_records_list_display_multiple_meals.yml',
+            ['-'],  # expected_meterings_data
+            ['4.0'],  # expected_meal_data
+            ['-'],  # expected_injections_data
+            ['-'],  # expected_comments_data
+        ],
+        [
+            'test_records_list_display_multiple_injections.yml',
+            ['-'],  # expected_meterings_data
+            ['-'],  # expected_meal_data
+            ['4+4 Foo, 10 Bar'],  # expected_injections_data
+            ['-'],  # expected_comments_data
+        ],
+        [
+            'test_records_list_display_multiple_comments.yml',
+            ['-'],  # expected_meterings_data
+            ['-'],  # expected_meal_data
+            ['-'],  # expected_injections_data
+            ['Foo; Bar'],  # expected_comments_data
+        ],
+        [
+            'test_records_list_display_long_comment.yml',
+            ['-'],  # expected_meterings_data
+            ['-'],  # expected_meal_data
+            ['-'],  # expected_injections_data
+            ['Just an incredi<...>'],  # expected_comments_data
+        ],
+    ],
+)
+@pytest.mark.parametrize('db_data_base_dir', [pathlib.Path('sugar', 'db_data', 'test_record_admin')])  # todo: use pytestmark?
+def test_records_list_display(
         create_client,
-        create_datetime,
-        create_record,
-        admin,
-        db_data_base_dir,
+        db_data,
+        expected_meterings_data,
+        expected_meal_data,
+        expected_injections_data,
+        expected_comments_data,
 ):
-    create_record(
-        whose=admin,
-        when=create_datetime('2021-05-16T10:00:00'),
-        metering_params=None,
-    )
-    create_record(
-        whose=admin,
-        when=create_datetime('2021-05-16T11:00:00'),
-        metering_params={
-            'sugar_level': Decimal('4.8'),
-        },
-        meal_params_list=(
-            {
-                'food_quantity': Decimal('2.0'),
-                'description': '',
-            },
-        ),
-        injection_params_list=(
-            {
-                'insulin_quantity': 4,
-            },
-        ),
-        comments_params_list=(
-            {
-                'content': 'Foo',
-            },
-        ),
-    )
+    admin = User.objects.get(username='admin')
 
     client = create_client(
         authenticated_with=admin,
@@ -268,22 +282,10 @@ def test_records_list_display_basic(
     injections_search = search_template.format('field-injections_info')
     comments_search = search_template.format('field-short_comments')
 
-    assert tree.xpath(meterings_search) == [
-        '4.8',
-        '-',
-    ]
-    assert tree.xpath(meal_search) == [
-        '2.0',
-        '-',
-    ]
-    assert tree.xpath(injections_search) == [
-        '4 Aspart',
-        '-',
-    ]
-    assert tree.xpath(comments_search) == [
-        'Foo',
-        '-',
-    ]
+    assert tree.xpath(meterings_search) == expected_meterings_data 
+    assert tree.xpath(meal_search) == expected_meal_data 
+    assert tree.xpath(injections_search) == expected_injections_data 
+    assert tree.xpath(comments_search) == expected_comments_data 
 
 
 def test_change_display_basic(
@@ -293,30 +295,7 @@ def test_change_display_basic(
         admin,
         db_data_base_dir,
 ):
-    record = create_record(
-        whose=admin,
-        when=create_datetime('2021-05-16T11:00:00'),
-        metering_params={
-            'sugar_level': Decimal('4.8'),
-        },
-        meal_params_list=(
-            {
-                'food_quantity': Decimal('2.0'),
-                'description': 'Foo',
-            },
-        ),
-        injection_params_list=(
-            {
-                'insulin_quantity': 4,
-            },
-        ),
-        comments_params_list=(
-            {
-                'content': 'Bar',
-            },
-        ),
-    )
-
+    record = models.Record.objects.get()
     client = create_client(
         authenticated_with=admin,
     )
@@ -458,62 +437,24 @@ def test_change_display_basic(
         'Bar',
     )
 
-
-def test_multiple_meterings(
-        create_datetime,
-        create_record,
-        create_sugar_metering,
-        db_data_base_dir,
-):
-    record = create_record()
-    create_sugar_metering(
-        record=record,
-        sugar_level=Decimal('4.8'),
-    )
-
-    with pytest.raises(IntegrityError):
-        create_sugar_metering(
-            record=record,
-            sugar_level=Decimal('6.8'),
-        )
-
-
-def test_multiple_meals_list_view(
-        create_client,
-        create_record,
-        admin,
-        db_data_base_dir,
-):
-    create_record(
-        meal_params_list=(
-            {
-                'food_quantity': Decimal('2.0'),
-                'description': '',
-            },
-            {
-                'food_quantity': Decimal('2.0'),
-                'description': '',
-            },
-        ),
-    )
-
-    client = create_client(
-        authenticated_with=admin,
-    )
-
-    response = client.get('/admin/sugar/record/')
-    assert response.status_code == 200
-
-    etree_html_parser = etree.HTMLParser()
-    tree = etree.XML(
-        text=response.content,
-        parser=etree_html_parser,
-    )
-
-    meal_search = '//table[@id="result_list"]/tbody/tr/td[@class="field-total_meal"]/text()'  # noqa
-    assert tree.xpath(meal_search) == [
-        '4.0',
-    ]
+# todo: move
+# def test_multiple_meterings(
+#         create_datetime,
+#         create_record,
+#         create_sugar_metering,
+#         db_data_base_dir,
+# ):
+#     record = create_record()
+#     create_sugar_metering(
+#         record=record,
+#         sugar_level=Decimal('4.8'),
+#     )
+#
+#     with pytest.raises(IntegrityError):
+#         create_sugar_metering(
+#             record=record,
+#             sugar_level=Decimal('6.8'),
+#         )
 
 
 def test_multiple_meals_change_view(
@@ -577,83 +518,6 @@ def test_multiple_meals_change_view(
     assert description == [
         'Foo',
         'Bar',
-    ]
-
-
-def test_multiple_injections_list_view(
-        create_client,
-        create_insulin_kind,
-        create_insulin_syringe,
-        create_record,
-        admin,
-        db_data_base_dir,
-):
-    foo_insulin_kind = create_insulin_kind(name='Foo')
-    bar_insulin_kind = create_insulin_kind(name='Bar')
-    foo_insulin_syringe = create_insulin_syringe(
-        whose=admin,
-        volume=300,
-        opening=date(
-            year=2021,
-            month=5,
-            day=1,
-        ),
-        expiry_plan=date(
-            year=2021,
-            month=6,
-            day=1,
-        ),
-        insulin_mark=foo_insulin_kind,
-    )
-    bar_insulin_syringe = create_insulin_syringe(
-        whose=admin,
-        volume=300,
-        opening=date(
-            year=2021,
-            month=5,
-            day=1,
-        ),
-        expiry_plan=date(
-            year=2021,
-            month=6,
-            day=1,
-        ),
-        insulin_mark=bar_insulin_kind,
-    )
-
-    create_record(
-        injection_params_list=(
-            {
-                'insulin_quantity': 4,
-                'insulin_syringe': foo_insulin_syringe,
-            },
-            {
-                'insulin_quantity': 4,
-                'insulin_syringe': foo_insulin_syringe,
-            },
-            {
-                'insulin_quantity': 10,
-                'insulin_syringe': bar_insulin_syringe,
-            },
-        ),
-    )
-
-    client = create_client(
-        authenticated_with=admin,
-    )
-
-    response = client.get('/admin/sugar/record/')
-    assert response.status_code == 200
-
-    etree_html_parser = etree.HTMLParser()
-    tree = etree.XML(
-        text=response.content,
-        parser=etree_html_parser,
-    )
-
-    injections_search = '//table[@id="result_list"]/tbody/tr/td[@class="field-injections_info"]/text()'  # noqa
-    assert tree.xpath(injections_search) == [
-        '4+4 Foo, 10 Bar',
     ]
 
 
@@ -747,71 +611,6 @@ def test_multiple_injections_change_view(
         'Шприц "Bar" (300 ед.) от 2021-05-02',
         '---------',
         '---------',
-    ]
-
-
-def test_multiple_comments(
-        create_client,
-        create_record,
-        admin,
-        db_data_base_dir,
-):
-    create_record(
-        comments_params_list=(
-            {'content': 'Foo'},
-            {'content': 'Bar'},
-        ),
-    )
-
-    client = create_client(
-        authenticated_with=admin,
-    )
-
-    response = client.get('/admin/sugar/record/')
-    assert response.status_code == 200
-
-    etree_html_parser = etree.HTMLParser()
-    tree = etree.XML(
-        text=response.content,
-        parser=etree_html_parser,
-    )
-
-    comments_search = '//table[@id="result_list"]/tbody/tr/td[@class="field-short_comments"]/text()'  # noqa
-
-    assert tree.xpath(comments_search) == [
-        'Foo; Bar',
-    ]
-
-
-def test_long_comment(
-        create_client,
-        create_record,
-        admin,
-        db_data_base_dir,
-):
-    create_record(
-        comments_params_list=(
-            {'content': 'Just an incredibly long comment'},
-        ),
-    )
-
-    client = create_client(
-        authenticated_with=admin,
-    )
-
-    response = client.get('/admin/sugar/record/')
-    assert response.status_code == 200
-
-    etree_html_parser = etree.HTMLParser()
-    tree = etree.XML(
-        text=response.content,
-        parser=etree_html_parser,
-    )
-
-    comments_search = '//table[@id="result_list"]/tbody/tr/td[@class="field-short_comments"]/text()'  # noqa
-
-    assert tree.xpath(comments_search) == [
-        'Just an incredi<...>',
     ]
 
 

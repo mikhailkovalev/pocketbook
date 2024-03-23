@@ -1,0 +1,62 @@
+# region users
+- model: auth.User
+  id: 100
+  username: admin
+  is_staff: true
+  is_superuser: true
+# endregion
+# region packs
+- model: sugar.TestStripPack
+  id: 200
+  whose_id: 100
+  volume: 50
+  opening: "2021-05-05"
+  expiry_plan: "2021-05-05"
+# endregion
+# region insulin_kind
+- model: sugar.InsulinKind
+  id: 300
+  name: Aspart
+# endregion
+# region insulin_syringes
+- model: sugar.InsulinSyringe
+  id: 400
+  insulin_mark_id: 300
+  whose_id: 100
+  volume: 300
+  opening: "2021-05-05"
+  expiry_plan: "2021-05-05"
+# endregion
+
+# region records
+- model: sugar.Record
+  id: 500
+  who_id: 100
+  when: "2021-05-16T10:00:00"
+- model: sugar.Record
+  id: 501
+  who_id: 100
+  when: "2021-05-16T11:00:00"
+# endregion
+# region meal
+- model: sugar.Meal
+  record_id: 501
+  food_quantity: "2.0"
+# endregion
+# region comments
+- model: sugar.Comment
+  record_id: 501
+  content: Foo
+# endregion
+# region sugar_metering
+- model: sugar.SugarMetering
+  record_id: 501
+  pack_id: 200
+  sugar_level: "4.8"
+# endregion
+# region sugar_insulin_injections
+- model: sugar.InsulinInjection
+  record_id: 501
+  insulin_syringe_id: 400
+  insulin_quantity: 4
+# endregion

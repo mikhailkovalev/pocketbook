@@ -1,0 +1,52 @@
+# region users
+- model: auth.User
+  id: 100
+  username: admin
+  is_staff: true
+  is_superuser: true
+# endregion
+# region insulin_kind
+- model: sugar.InsulinKind
+  id: 300
+  name: Foo
+- model: sugar.InsulinKind
+  id: 301
+  name: Bar
+# endregion
+# region insulin_syringes
+- model: sugar.InsulinSyringe
+  id: 400
+  insulin_mark_id: 300
+  whose_id: 100
+  volume: 300
+  opening: "2021-05-01"
+  expiry_plan: "2021-06-01"
+- model: sugar.InsulinSyringe
+  id: 401
+  insulin_mark_id: 301
+  whose_id: 100
+  volume: 300
+  opening: "2021-05-01"
+  expiry_plan: "2021-06-01"
+# endregion
+
+# region records
+- model: sugar.Record
+  id: 500
+  who_id: 100
+  when: "2021-05-16T11:00:00"
+# endregion
+# region sugar_insulin_injections
+- model: sugar.InsulinInjection
+  record_id: 500
+  insulin_syringe_id: 400
+  insulin_quantity: 4
+- model: sugar.InsulinInjection
+  record_id: 500
+  insulin_syringe_id: 400
+  insulin_quantity: 4
+- model: sugar.InsulinInjection
+  record_id: 500
+  insulin_syringe_id: 401
+  insulin_quantity: 10
+# endregion
