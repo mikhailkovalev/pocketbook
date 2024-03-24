@@ -19,146 +19,7 @@ from lxml import (
 from sugar import models
 
 
-def test_add_record(
-        create_client,
-        db_data_base_dir,
-        admin,
-):
-    url = '/admin/sugar/record/add/'
-    client = create_client(
-        authenticated_with=admin,
-    )
-    response = client.get(url)
-
-    assert response.status_code == 200
-
-    etree_html_parser = etree.HTMLParser()
-    tree = etree.XML(
-        text=response.content.decode('utf=8'),
-        parser=etree_html_parser,
-    )
-
-    date_value = tree.xpath(
-        '//div[@class="form-row field-when"]'
-        '/div'
-        '/p[@class="datetime"]'
-        '/input[@name="when_0"]'
-        '/@value'
-    )
-    assert date_value == []
-
-    time_value = tree.xpath(
-        '//div[@class="form-row field-when"]'
-        '/div'
-        '/p[@class="datetime"]'
-        '/input[@name="when_1"]'
-        '/@value'
-    )
-    assert time_value == []
-
-    selected_metering_pack = tree.xpath(
-        '//div[@id="sugarmetering-group"]'
-        '/div'
-        '/fieldset'
-        '/table'
-        '/tbody'
-        '/tr[starts-with(@id, "sugarmetering-")]'
-        '/td[@class="field-pack"]'
-        '/div'
-        '/select[@id="id_sugarmetering-0-pack"]'
-        '/option[@selected]'
-        '/text()'
-    )
-    assert selected_metering_pack == [
-        '---------',
-    ]
-
-    sugar_level = tree.xpath(
-        '//div[@id="sugarmetering-group"]'
-        '/div'
-        '/fieldset'
-        '/table'
-        '/tbody'
-        '/tr[starts-with(@id, "sugarmetering-")]'
-        '/td[@class="field-sugar_level"]'
-        '/input[@id="id_sugarmetering-0-sugar_level"]'
-        '/@value'
-    )
-    assert sugar_level == []
-
-    food_quantity = tree.xpath(
-        '//div[@id="meal_set-group"]'
-        '/div'
-        '/fieldset'
-        '/table'
-        '/tbody'
-        '/tr[starts-with(@id, "meal_set")]'
-        '/td[@class="field-food_quantity"]'
-        '/input'
-        '/@value'
-    )
-    assert food_quantity == []
-
-    food_description = tree.xpath(
-        '//div[@id="meal_set-group"]'
-        '/div'
-        '/fieldset'
-        '/table'
-        '/tbody'
-        '/tr[starts-with(@id, "meal_set-")]'
-        '/td[@class="field-description"]'
-        '/input'
-        '/@value'
-    )
-    assert food_description == []
-
-    selected_syringe = tree.xpath(
-        '//div[@id="insulininjection_set-group"]'
-        '/div'
-        '/fieldset'
-        '/table'
-        '/tbody'
-        '/tr[@id="insulininjection_set-0"]'
-        '/td[@class="field-insulin_syringe"]'
-        '/div'
-        '/select'
-        '/option[@selected]'
-        '/text()'
-    )
-    assert selected_syringe == [
-        '---------',
-    ]
-
-    insulin_quantity = tree.xpath(
-        '//div[@id="insulininjection_set-group"]'
-        '/div'
-        '/fieldset'
-        '/table'
-        '/tbody'
-        '/tr[starts-with(@id, "insulininjection_set-")]'
-        '/td[@class="field-insulin_quantity"]'
-        '/input'
-        '/@value'
-    )
-    assert insulin_quantity == []
-
-    comment = tree.xpath(
-        '//div[@id="comment_set-group"]'
-        '/div'
-        '/fieldset'
-        '/table'
-        '/tbody'
-        '/tr[@id="comment_set-0"]'
-        '/td[@class="field-content"]'
-        '/textarea'
-        '/text()'
-    )
-    assert tuple(map(str.strip, comment)) == (
-        '',
-    )
-
-
-@pytest.mark.parametrize('db_data_filename', ['test_records_list_ownership.yml'])
+@pytest.mark.parametrize('db_data_filename', ['test_records_list_ownership.yml'])  # todo: merge into test_records_list_display
 @pytest.mark.parametrize('db_data_base_dir', [pathlib.Path('sugar', 'db_data', 'test_record_admin')])  # todo: use pytestmark?
 @pytest.mark.parametrize(
     ['username', 'expected_records_markers'],
@@ -291,6 +152,7 @@ def test_records_list_display(
 @pytest.mark.parametrize(
     [
         'db_data_filename',
+        'display_type',
         'expected_date_data',
         'expected_time_data',
         'expected_pack_data',
@@ -304,82 +166,106 @@ def test_records_list_display(
         'expected_comments_data',
     ],
     [
+        # # region display_type='change'
+        # [
+        #     'test_change_display_basic.yml',  # db_data_filename
+        #     'change',  # display_type
+        #     ['2021-05-16'],  # expected_date_data
+        #     ['11:00:00'],  # expected_time_data
+        #     ['Пачка тест-полосок от 2021-05-05', '---------'],  # expected_pack_data
+        #     ['---------', 'Пачка тест-полосок от 2021-05-05', 'Пачка тест-полосок от 2021-05-06'] * 2,  # expected_pack_options
+        #     ['4.8'],  # expected_meterings_data
+        #     ['2.0'],  # expected_meal_data
+        #     ['Foo'],  # expected_meal_description_data
+        #     # region expected_syringes_data
+        #     [
+        #         'Шприц "Aspart" (300 ед.) от 2021-05-07',
+        #         '---------',
+        #         '---------',
+        #     ],
+        #     # endregion
+        #     ['---------', 'Шприц "Aspart" (300 ед.) от 2021-05-07'] * 3,  # expected_syringes_options
+        #     ['4'],  # expected_injections_data
+        #     ['Bar', '', ''],  # expected_comments_data
+        # ],
+        # [
+        #     'test_change_display_multiple_meals.yml',  # db_data_filename
+        #     'change',  # display_type
+        #     ['2021-05-16'],  # expected_date_data
+        #     ['11:00:00'],  # expected_time_data
+        #     ['---------', '---------'],  # expected_pack_data
+        #     ['---------'] * 2,  # expected_pack_options
+        #     [],  # expected_meterings_data
+        #     ['2.0', '3.0'],  # expected_meal_data
+        #     ['Foo', 'Bar'],  # expected_meal_description_data
+        #     ['---------', '---------'],  # expected_syringes_data
+        #     ['---------', '---------'],  # expected_syringes_options
+        #     [],  # expected_injections_data
+        #     ['', ''],  # expected_comments_data
+        # ],
+        # [
+        #     'test_change_display_multiple_injections.yml',  # db_data_filename
+        #     'change',  # display_type
+        #     ['2021-05-16'],  # expected_date_data
+        #     ['11:00:00'],  # expected_time_data
+        #     ['---------', '---------'],  # expected_pack_data
+        #     ['---------'] * 2,  # expected_pack_options
+        #     [],  # expected_meterings_data
+        #     [],  # expected_meal_data
+        #     [],  # expected_meal_description_data
+        #     # region expected_syringes_data
+        #     [
+        #         'Шприц "Foo" (300 ед.) от 2021-05-01',
+        #         'Шприц "Foo" (300 ед.) от 2021-05-01',
+        #         'Шприц "Bar" (300 ед.) от 2021-05-02',
+        #         '---------',
+        #         '---------',
+        #     ],
+        #     # endregion
+        #     ['---------', 'Шприц "Foo" (300 ед.) от 2021-05-01', 'Шприц "Bar" (300 ед.) от 2021-05-02'] * 5,  # expected_syringes_options
+        #     ['4', '4', '10'],  # expected_injections_data
+        #     ['', ''],  # expected_comments_data
+        # ],
+        # [
+        #     'test_change_display_multiple_comments.yml',  # db_data_filename
+        #     'change',  # display_type
+        #     ['2021-05-16'],  # expected_date_data
+        #     ['11:00:00'],  # expected_time_data
+        #     ['---------', '---------'],  # expected_pack_data
+        #     ['---------'] * 2,  # expected_pack_options
+        #     [],  # expected_meterings_data
+        #     [],  # expected_meal_data
+        #     [],  # expected_meal_description_data
+        #     ['---------', '---------'],  # expected_syringes_data
+        #     ['---------', '---------'],  # expected_syringes_options
+        #     [],  # expected_injections_data
+        #     ['Foo', 'Bar', '', ''],  # expected_comments_data
+        # ],
+        # # endregion
+        # region display_type='add'
         [
-            'test_change_display_basic.yml',  # db_data_filename
-            ['2021-05-16'],  # expected_date_data
-            ['11:00:00'],  # expected_time_data
-            ['Пачка тест-полосок от 2021-05-05', '---------'],  # expected_pack_data
-            ['---------', 'Пачка тест-полосок от 2021-05-05', 'Пачка тест-полосок от 2021-05-06'] * 2,  # expected_pack_options
-            ['4.8'],  # expected_meterings_data
-            ['2.0'],  # expected_meal_data
-            ['Foo'],  # expected_meal_description_data
-            # region expected_syringes_data
-            [
-                'Шприц "Aspart" (300 ед.) от 2021-05-07',
-                '---------',
-                '---------',
-            ],
-            # endregion
-            ['---------', 'Шприц "Aspart" (300 ед.) от 2021-05-07'] * 3,  # expected_syringes_options
-            ['4'],  # expected_injections_data
-            ['Bar', '', ''],  # expected_comments_data
-        ],
-        [
-            'test_change_display_multiple_meals.yml',  # db_data_filename
-            ['2021-05-16'],  # expected_date_data
-            ['11:00:00'],  # expected_time_data
-            ['---------', '---------'],  # expected_pack_data
-            ['---------'] * 2,  # expected_pack_options
-            [],  # expected_meterings_data
-            ['2.0', '3.0'],  # expected_meal_data
-            ['Foo', 'Bar'],  # expected_meal_description_data
-            ['---------', '---------'],  # expected_syringes_data
-            ['---------', '---------'],  # expected_syringes_options
-            [],  # expected_injections_data
-            ['', ''],  # expected_comments_data
-        ],
-        [
-            'test_change_display_multiple_injections.yml',  # db_data_filename
-            ['2021-05-16'],  # expected_date_data
-            ['11:00:00'],  # expected_time_data
+            'test_add_display_basic.yml',  # db_data_filename
+            'add',  # display_type
+            [],  # expected_date_data
+            [],  # expected_time_data
             ['---------', '---------'],  # expected_pack_data
             ['---------'] * 2,  # expected_pack_options
             [],  # expected_meterings_data
             [],  # expected_meal_data
             [],  # expected_meal_description_data
-            # region expected_syringes_data
-            [
-                'Шприц "Foo" (300 ед.) от 2021-05-01',
-                'Шприц "Foo" (300 ед.) от 2021-05-01',
-                'Шприц "Bar" (300 ед.) от 2021-05-02',
-                '---------',
-                '---------',
-            ],
-            # endregion
-            ['---------', 'Шприц "Foo" (300 ед.) от 2021-05-01', 'Шприц "Bar" (300 ед.) от 2021-05-02'] * 5,  # expected_syringes_options
-            ['4', '4', '10'],  # expected_injections_data
-            ['', ''],  # expected_comments_data
-        ],
-        [
-            'test_change_display_multiple_comments.yml',  # db_data_filename
-            ['2021-05-16'],  # expected_date_data
-            ['11:00:00'],  # expected_time_data
-            ['---------', '---------'],  # expected_pack_data
-            ['---------'] * 2,  # expected_pack_options
-            [],  # expected_meterings_data
-            [],  # expected_meal_data
-            [],  # expected_meal_description_data
             ['---------', '---------'],  # expected_syringes_data
             ['---------', '---------'],  # expected_syringes_options
             [],  # expected_injections_data
-            ['Foo', 'Bar', '', ''],  # expected_comments_data
+            ['', ''],  # expected_comments_data
         ],
+        # endregion
     ],
 )
 @pytest.mark.parametrize('db_data_base_dir', [pathlib.Path('sugar', 'db_data', 'test_record_admin')])  # todo: use pytestmark?
-def test_change_display(
+def test_add_or_change_display(
         create_client,
         db_data,
+        display_type,
         expected_date_data,
         expected_time_data,
         expected_pack_data,
@@ -393,11 +279,19 @@ def test_change_display(
         expected_comments_data,
 ):
     admin = User.objects.get(username='admin')
-    record = models.Record.objects.get()
     client = create_client(
         authenticated_with=admin,
     )
-    response = client.get(f'/admin/sugar/record/{record.pk}/change/')
+
+    if display_type == 'change':
+        record = models.Record.objects.get()
+        url = f'/admin/sugar/record/{record.pk}/change/'
+    elif display_type == 'add':
+        url = '/admin/sugar/record/add/'
+    else:
+        raise NotImplementedError(f'Unknown display_type={display_type!r}')
+
+    response = client.get(url)
     assert response.status_code == 200
 
     etree_html_parser = etree.HTMLParser()
