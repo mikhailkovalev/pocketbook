@@ -12,6 +12,22 @@
   volume: 50
   opening: "2021-05-05"
   expiry_plan: "2021-05-05"
+- model: sugar.TestStripPack
+  whose_id: 100
+  volume: 50
+  opening: "2021-04-01"
+  expiry_plan: "2021-04-30"
+  expiry_actual: "2021-04-30"
+- model: sugar.TestStripPack
+  whose_id: 100
+  volume: 50
+  opening: "2021-05-17"
+  expiry_plan: "2021-05-24"
+- model: sugar.TestStripPack
+  whose_id: 100
+  volume: 50
+  opening: "2021-05-06"
+  expiry_plan: "2021-05-13"
 # endregion
 # region insulin_kind
 - model: sugar.InsulinKind
@@ -24,8 +40,23 @@
   insulin_mark_id: 300
   whose_id: 100
   volume: 300
-  opening: "2021-05-05"
-  expiry_plan: "2021-05-05"
+  opening: "2021-05-07"
+  expiry_plan: "2021-05-20"
+- model: sugar.InsulinSyringe
+  id: 401
+  insulin_mark_id: 300
+  whose_id: 100
+  volume: 300
+  opening: "2021-04-24"
+  expiry_plan: "2021-05-07"
+  expiry_actual: "2021-05-07"
+- model: sugar.InsulinSyringe
+  id: 402
+  insulin_mark_id: 300
+  whose_id: 100
+  volume: 300
+  opening: "2021-05-17"
+  expiry_plan: "2021-05-20"
 # endregion
 
 # region records

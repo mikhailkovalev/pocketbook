@@ -288,13 +288,111 @@ def test_records_list_display(
     assert tree.xpath(comments_search) == expected_comments_data 
 
 
-def test_change_display_basic(
+@pytest.mark.parametrize(
+    [
+        'db_data_filename',
+        'expected_date_data',
+        'expected_time_data',
+        'expected_pack_data',
+        'expected_pack_options',
+        'expected_meterings_data',
+        'expected_meal_data',
+        'expected_meal_description_data',
+        'expected_syringes_data',
+        'expected_syringes_options',
+        'expected_injections_data',
+        'expected_comments_data',
+    ],
+    [
+        [
+            'test_change_display_basic.yml',  # db_data_filename
+            ['2021-05-16'],  # expected_date_data
+            ['11:00:00'],  # expected_time_data
+            ['Пачка тест-полосок от 2021-05-05', '---------'],  # expected_pack_data
+            ['---------', 'Пачка тест-полосок от 2021-05-05', 'Пачка тест-полосок от 2021-05-06'] * 2,  # expected_pack_options
+            ['4.8'],  # expected_meterings_data
+            ['2.0'],  # expected_meal_data
+            ['Foo'],  # expected_meal_description_data
+            # region expected_syringes_data
+            [
+                'Шприц "Aspart" (300 ед.) от 2021-05-07',
+                '---------',
+                '---------',
+            ],
+            # endregion
+            ['---------', 'Шприц "Aspart" (300 ед.) от 2021-05-07'] * 3,  # expected_syringes_options
+            ['4'],  # expected_injections_data
+            ['Bar', '', ''],  # expected_comments_data
+        ],
+        [
+            'test_change_display_multiple_meals.yml',  # db_data_filename
+            ['2021-05-16'],  # expected_date_data
+            ['11:00:00'],  # expected_time_data
+            ['---------', '---------'],  # expected_pack_data
+            ['---------'] * 2,  # expected_pack_options
+            [],  # expected_meterings_data
+            ['2.0', '3.0'],  # expected_meal_data
+            ['Foo', 'Bar'],  # expected_meal_description_data
+            ['---------', '---------'],  # expected_syringes_data
+            ['---------', '---------'],  # expected_syringes_options
+            [],  # expected_injections_data
+            ['', ''],  # expected_comments_data
+        ],
+        [
+            'test_change_display_multiple_injections.yml',  # db_data_filename
+            ['2021-05-16'],  # expected_date_data
+            ['11:00:00'],  # expected_time_data
+            ['---------', '---------'],  # expected_pack_data
+            ['---------'] * 2,  # expected_pack_options
+            [],  # expected_meterings_data
+            [],  # expected_meal_data
+            [],  # expected_meal_description_data
+            # region expected_syringes_data
+            [
+                'Шприц "Foo" (300 ед.) от 2021-05-01',
+                'Шприц "Foo" (300 ед.) от 2021-05-01',
+                'Шприц "Bar" (300 ед.) от 2021-05-02',
+                '---------',
+                '---------',
+            ],
+            # endregion
+            ['---------', 'Шприц "Foo" (300 ед.) от 2021-05-01', 'Шприц "Bar" (300 ед.) от 2021-05-02'] * 5,  # expected_syringes_options
+            ['4', '4', '10'],  # expected_injections_data
+            ['', ''],  # expected_comments_data
+        ],
+        [
+            'test_change_display_multiple_comments.yml',  # db_data_filename
+            ['2021-05-16'],  # expected_date_data
+            ['11:00:00'],  # expected_time_data
+            ['---------', '---------'],  # expected_pack_data
+            ['---------'] * 2,  # expected_pack_options
+            [],  # expected_meterings_data
+            [],  # expected_meal_data
+            [],  # expected_meal_description_data
+            ['---------', '---------'],  # expected_syringes_data
+            ['---------', '---------'],  # expected_syringes_options
+            [],  # expected_injections_data
+            ['Foo', 'Bar', '', ''],  # expected_comments_data
+        ],
+    ],
+)
+@pytest.mark.parametrize('db_data_base_dir', [pathlib.Path('sugar', 'db_data', 'test_record_admin')])  # todo: use pytestmark?
+def test_change_display(
         create_client,
-        create_datetime,
-        create_record,
-        admin,
-        db_data_base_dir,
+        db_data,
+        expected_date_data,
+        expected_time_data,
+        expected_pack_data,
+        expected_pack_options,
+        expected_meterings_data,
+        expected_meal_data,
+        expected_meal_description_data,
+        expected_syringes_data,
+        expected_syringes_options,
+        expected_injections_data,
+        expected_comments_data,
 ):
+    admin = User.objects.get(username='admin')
     record = models.Record.objects.get()
     client = create_client(
         authenticated_with=admin,
@@ -315,9 +413,7 @@ def test_change_display_basic(
         '/input[@name="when_0"]'
         '/@value'
     )
-    assert date_value == [
-        '2021-05-16',
-    ]
+    assert date_value == expected_date_data
 
     time_value = tree.xpath(
         '//div[@class="form-row field-when"]'
@@ -326,9 +422,7 @@ def test_change_display_basic(
         '/input[@name="when_1"]'
         '/@value'
     )
-    assert time_value == [
-        '11:00:00',
-    ]
+    assert time_value == expected_time_data
 
     selected_metering_pack = tree.xpath(
         '//div[@id="sugarmetering-group"]'
@@ -339,13 +433,34 @@ def test_change_display_basic(
         '/tr[starts-with(@id, "sugarmetering-")]'
         '/td[@class="field-pack"]'
         '/div'
-        '/select[@id="id_sugarmetering-0-pack"]'
+        '/select['
+        '    starts-with(@id, "id_sugarmetering-")'
+        '    and contains(@id, "pack")'
+        '    and substring-after(@id, "pack") = ""'
+        ']'
         '/option[@selected]'
         '/text()'
     )
-    assert selected_metering_pack == [
-        'Пачка тест-полосок от 2021-05-05',
-    ]
+    assert selected_metering_pack == expected_pack_data
+    
+    pack_options = tree.xpath(
+        '//div[@id="sugarmetering-group"]'
+        '/div'
+        '/fieldset'
+        '/table'
+        '/tbody'
+        '/tr[starts-with(@id, "sugarmetering-")]'
+        '/td[@class="field-pack"]'
+        '/div'
+        '/select['
+        '    starts-with(@id, "id_sugarmetering-")'
+        '    and contains(@id, "pack")'
+        '    and substring-after(@id, "pack") = ""'
+        ']'
+        '/option'
+        '/text()'
+    )
+    assert pack_options == expected_pack_options
 
     sugar_level = tree.xpath(
         '//div[@id="sugarmetering-group"]'
@@ -355,10 +470,14 @@ def test_change_display_basic(
         '/tbody'
         '/tr[starts-with(@id, "sugarmetering-")]'
         '/td[@class="field-sugar_level"]'
-        '/input[@id="id_sugarmetering-0-sugar_level"]'
+        '/input['
+        '    starts-with(@id, "id_sugarmetering-")'
+        '    and contains(@id, "-sugar_level")'
+        '    and substring-after(@id, "-sugar_level") = ""'
+        ']'
         '/@value'
     )
-    assert sugar_level == ['4.8']
+    assert sugar_level == expected_meterings_data
 
     food_quantity = tree.xpath(
         '//div[@id="meal_set-group"]'
@@ -366,14 +485,12 @@ def test_change_display_basic(
         '/fieldset'
         '/table'
         '/tbody'
-        '/tr[starts-with(@id, "meal_set")]'
+        '/tr[starts-with(@id, "meal_set-")]'
         '/td[@class="field-food_quantity"]'
         '/input'
         '/@value'
     )
-    assert food_quantity == [
-        '2.0'
-    ]
+    assert food_quantity == expected_meal_data
 
     food_description = tree.xpath(
         '//div[@id="meal_set-group"]'
@@ -386,9 +503,7 @@ def test_change_display_basic(
         '/input'
         '/@value'
     )
-    assert food_description == [
-        'Foo',
-    ]
+    assert food_description == expected_meal_description_data
 
     selected_syringe = tree.xpath(
         '//div[@id="insulininjection_set-group"]'
@@ -396,16 +511,37 @@ def test_change_display_basic(
         '/fieldset'
         '/table'
         '/tbody'
-        '/tr[@id="insulininjection_set-0"]'
+        '/tr[starts-with(@id, "insulininjection_set-")]'
         '/td[@class="field-insulin_syringe"]'
         '/div'
-        '/select'
+        '/select['
+        '    starts-with(@id, "id_insulininjection_set-")'
+        '    and contains(@id, "-insulin_syringe")'
+        '    and substring-after(@id, "-insulin_syringe") = ""'
+        ']'
         '/option[@selected]'
         '/text()'
     )
-    assert selected_syringe == [
-        'Шприц "Aspart" (300 ед.) от 2021-05-07',
-    ]
+    assert selected_syringe == expected_syringes_data
+
+    syringe_options = tree.xpath(
+        '//div[@id="insulininjection_set-group"]'
+        '/div'
+        '/fieldset'
+        '/table'
+        '/tbody'
+        '/tr[starts-with(@id, "insulininjection_set-")]'
+        '/td[@class="field-insulin_syringe"]'
+        '/div'
+        '/select['
+        '    starts-with(@id, "id_insulininjection_set-")'
+        '    and contains(@id, "-insulin_syringe")'
+        '    and substring-after(@id, "-insulin_syringe") = ""'
+        ']'
+        '/option'
+        '/text()'
+    )
+    assert syringe_options == expected_syringes_options
 
     insulin_quantity = tree.xpath(
         '//div[@id="insulininjection_set-group"]'
@@ -418,9 +554,7 @@ def test_change_display_basic(
         '/input'
         '/@value'
     )
-    assert insulin_quantity == [
-        '4',
-    ]
+    assert insulin_quantity == expected_injections_data
 
     comment = tree.xpath(
         '//div[@id="comment_set-group"]'
@@ -428,14 +562,12 @@ def test_change_display_basic(
         '/fieldset'
         '/table'
         '/tbody'
-        '/tr[@id="comment_set-0"]'
+        '/tr[starts-with(@id, "comment_set-")]'
         '/td[@class="field-content"]'
         '/textarea'
         '/text()'
     )
-    assert tuple(map(str.strip, comment)) == (
-        'Bar',
-    )
+    assert list(map(str.strip, comment)) == expected_comments_data
 
 # todo: move
 # def test_multiple_meterings(
@@ -455,163 +587,6 @@ def test_change_display_basic(
 #             record=record,
 #             sugar_level=Decimal('6.8'),
 #         )
-
-
-def test_multiple_meals_change_view(
-        create_client,
-        create_record,
-        admin,
-        db_data_base_dir,
-):
-    record = create_record(
-        meal_params_list=(
-            {
-                'food_quantity': Decimal('2.0'),
-                'description': 'Foo',
-            },
-            {
-                'food_quantity': Decimal('3.0'),
-                'description': 'Bar',
-            },
-        ),
-    )
-
-    client = create_client(
-        authenticated_with=admin,
-    )
-    response = client.get(f'/admin/sugar/record/{record.pk}/change/')
-    assert response.status_code == 200
-
-    etree_html_parser = etree.HTMLParser()
-    tree = etree.XML(
-        text=response.content.decode('utf=8'),
-        parser=etree_html_parser,
-    )
-
-    food_quantity = tree.xpath(
-        '//div[@id="meal_set-group"]'
-        '/div'
-        '/fieldset'
-        '/table'
-        '/tbody'
-        '/tr[starts-with(@id, "meal_set")]'
-        '/td[@class="field-food_quantity"]'
-        '/input'
-        '/@value'
-    )
-    assert food_quantity == [
-        '2.0',
-        '3.0',
-    ]
-
-    description = tree.xpath(
-        '//div[@id="meal_set-group"]'
-        '/div'
-        '/fieldset'
-        '/table'
-        '/tbody'
-        '/tr[starts-with(@id, "meal_set")]'
-        '/td[@class="field-description"]'
-        '/input'
-        '/@value'
-    )
-    assert description == [
-        'Foo',
-        'Bar',
-    ]
-
-
-def test_multiple_injections_change_view(
-        create_client,
-        create_insulin_kind,
-        create_insulin_syringe,
-        create_record,
-        admin,
-        db_data_base_dir,
-):
-    foo_insulin_kind = create_insulin_kind(name='Foo')
-    bar_insulin_kind = create_insulin_kind(name='Bar')
-    foo_insulin_syringe = create_insulin_syringe(
-        whose=admin,
-        volume=300,
-        opening=date(
-            year=2021,
-            month=5,
-            day=1,
-        ),
-        expiry_plan=date(
-            year=2021,
-            month=6,
-            day=1,
-        ),
-        insulin_mark=foo_insulin_kind,
-    )
-    bar_insulin_syringe = create_insulin_syringe(
-        whose=admin,
-        volume=300,
-        opening=date(
-            year=2021,
-            month=5,
-            day=2,
-        ),
-        expiry_plan=date(
-            year=2021,
-            month=6,
-            day=2,
-        ),
-        insulin_mark=bar_insulin_kind,
-    )
-
-    record = create_record(
-        injection_params_list=(
-            {
-                'insulin_quantity': 4,
-                'insulin_syringe': foo_insulin_syringe,
-            },
-            {
-                'insulin_quantity': 4,
-                'insulin_syringe': foo_insulin_syringe,
-            },
-            {
-                'insulin_quantity': 10,
-                'insulin_syringe': bar_insulin_syringe,
-            },
-        ),
-    )
-
-    client = create_client(
-        authenticated_with=admin,
-    )
-
-    response = client.get(f'/admin/sugar/record/{record.pk}/change/')
-    assert response.status_code == 200
-
-    etree_html_parser = etree.HTMLParser()
-    tree = etree.XML(
-        text=response.content.decode('utf-8'),
-        parser=etree_html_parser,
-    )
-
-    selected_syringe = tree.xpath(
-        '//div[@id="insulininjection_set-group"]'
-        '/div'
-        '/fieldset'
-        '/table'
-        '/tbody'
-        '/tr[starts-with(@id, "insulininjection_set-")]'
-        '/td[@class="field-insulin_syringe"]'
-        '/div'
-        '/select'
-        '/option[@selected]'
-        '/text()'
-    )
-    assert selected_syringe == [
-        'Шприц "Foo" (300 ед.) от 2021-05-01',
-        'Шприц "Foo" (300 ед.) от 2021-05-01',
-        'Шприц "Bar" (300 ед.) от 2021-05-02',
-        '---------',
-        '---------',
-    ]
 
 
 def test_actuality_for_new(
@@ -744,110 +719,4 @@ def test_actuality_for_new(
     assert tree.xpath(select_syringe_search)[1:] == [
         'Шприц "Aspart" (300 ед.) от 2021-05-01',
         'Шприц "Aspart" (300 ед.) от 2021-05-10',
-    ]
-
-
-def test_actuality_for_edit(
-        create_client,
-        create_datetime,
-        create_insulin_syringe,
-        create_test_strip_pack,
-        create_record,
-        admin,
-        db_data_base_dir,
-):
-    create_test_strip_pack(  # actual pack
-        whose=admin,
-        volume=50,
-        opening=date(
-            year=2021,
-            month=4,
-            day=1,
-        ),
-        expiry_plan=date(
-            year=2021,
-            month=5,
-            day=1,
-        ),
-        expiry_actual=date(
-            year=2021,
-            month=4,
-            day=30,
-        ),
-    )
-    create_test_strip_pack(  # future pack
-        whose=admin,
-        volume=50,
-        opening=date(
-            year=2021,
-            month=5,
-            day=1,
-        ),
-        expiry_plan=date(
-            year=2021,
-            month=6,
-            day=1,
-        ),
-    )
-    
-    create_insulin_syringe(  # actual syringe
-        whose=admin,
-        volume=300,
-        opening=date(
-            year=2021,
-            month=4,
-            day=1,
-        ),
-        expiry_plan=date(
-            year=2021,
-            month=5,
-            day=1,
-        ),
-        expiry_actual=date(
-            year=2021,
-            month=4,
-            day=30,
-        ),
-    )
-    create_insulin_syringe(  # future syringe
-        whose=admin,
-        volume=300,
-        opening=date(
-            year=2021,
-            month=5,
-            day=1,
-        ),
-        expiry_plan=date(
-            year=2021,
-            month=6,
-            day=1,
-        ),
-    )
-
-    record = create_record(
-        whose=admin,
-        when=create_datetime('2021-04-16T11:00:00'),
-    )
-
-    client = create_client(
-        authenticated_with=admin,
-    )
-
-    response = client.get(f'/admin/sugar/record/{record.pk}/change/')
-    assert response.status_code == 200
-
-    etree_html_parser = etree.HTMLParser()
-    tree = etree.XML(
-        text=response.content.decode('utf-8'),
-        parser=etree_html_parser,
-    )
-
-    select_pack_search = '//select[@name="sugarmetering-0-pack"]/option/text()'
-    assert tree.xpath(select_pack_search)[1:] == [
-        'Пачка тест-полосок от 2021-04-01',
-    ]
-
-    select_syringe_search = '//select[@name="insulininjection_set-0-insulin_syringe"]/option/text()'  # noqa
-    assert tree.xpath(select_syringe_search)[1:] == [
-        'Шприц "Aspart" (300 ед.) от 2021-04-01',
     ]
