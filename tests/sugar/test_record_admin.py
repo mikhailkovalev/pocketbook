@@ -1,75 +1,23 @@
 import pathlib
-from datetime import (
-    date,
-    datetime,
-)
-from decimal import (
-    Decimal,
-)
 
 import pytest
 from django.contrib.auth.models import User
-from django.db.utils import (
-    IntegrityError,
-)
 from lxml import (
     etree,
 )
 
 from sugar import models
 
-
-@pytest.mark.parametrize('db_data_filename', ['test_records_list_ownership.yml'])  # todo: merge into test_records_list_display
-@pytest.mark.parametrize('db_data_base_dir', [pathlib.Path('sugar', 'db_data', 'test_record_admin')])  # todo: use pytestmark?
-@pytest.mark.parametrize(
-    ['username', 'expected_records_markers'],
-    [
-        [
-            'admin',
-            [
-                '2021-05-16 10:00',
-                '2021-05-16 11:00',
-                '2021-05-16 12:00',
-            ],
-        ],
-        [
-            'admin2',
-            [
-                '2021-05-16 10:30',
-                '2021-05-16 11:30',
-            ],
-        ],
-    ],
-)
-def test_records_list_ownership(
-        create_client,
-        db_data,
-        username,
-        expected_records_markers,
-):
-    user = User.objects.get(username=username)
-
-    etree_html_parser = etree.HTMLParser()  # fixme: fixture?
-    search_equation = '//table[@id="result_list"]/tbody/tr/th/a/text()'
-
-    client = create_client(
-        authenticated_with=user,
-    )
-    response = client.get('/admin/sugar/record/')
-    assert response.status_code == 200
-
-    tree = etree.XML(
-        text=response.content,
-        parser=etree_html_parser,
-    )
-    markers = tree.xpath(search_equation)
-    markers.sort()
-    assert markers == expected_records_markers
+pytestmark = [
+    pytest.mark.parametrize('db_data_base_dir', [pathlib.Path('sugar', 'db_data', 'test_record_admin')]),
+]
 
 
 @pytest.mark.parametrize(
     [
         'db_data_filename',
+        'username',
+        'expected_when_data',
         'expected_meterings_data',
         'expected_meal_data',
         'expected_injections_data',
@@ -78,13 +26,35 @@ def test_records_list_ownership(
     [
         [
             'test_records_list_display_basic.yml',
+            'admin',  # username
+            ['2021-05-16 11:00', '2021-05-16 10:00'],  # expected_when_data
             ['4.8', '-'],  # expected_meterings_data
             ['2.0', '-'],  # expected_meal_data
             ['4 Aspart', '-'],  # expected_injections_data
             ['Foo', '-'],  # expected_comments_data
         ],
         [
+            'test_records_list_display_ownership.yml',
+            'admin',  # username
+            ['2021-05-16 12:00', '2021-05-16 11:00', '2021-05-16 10:00'],  # expected_when_data
+            ['-', '-', '-'],  # expected_meterings_data
+            ['-', '-', '-'],  # expected_meal_data
+            ['-', '-', '-'],  # expected_injections_data
+            ['-', '-', '-'],  # expected_comments_data
+        ],
+        [
+            'test_records_list_display_ownership.yml',
+            'admin2',  # username
+            ['2021-05-16 11:30', '2021-05-16 10:30'],  # expected_when_data
+            ['-', '-'],  # expected_meterings_data
+            ['-', '-'],  # expected_meal_data
+            ['-', '-'],  # expected_injections_data
+            ['-', '-'],  # expected_comments_data
+        ],
+        [
             'test_records_list_display_multiple_meals.yml',
+            'admin',  # username
+            ['2021-05-16 11:00'],  # expected_when_data
             ['-'],  # expected_meterings_data
             ['4.0'],  # expected_meal_data
             ['-'],  # expected_injections_data
@@ -92,6 +62,8 @@ def test_records_list_ownership(
         ],
         [
             'test_records_list_display_multiple_injections.yml',
+            'admin',  # username
+            ['2021-05-16 11:00'],  # expected_when_data
             ['-'],  # expected_meterings_data
             ['-'],  # expected_meal_data
             ['4+4 Foo, 10 Bar'],  # expected_injections_data
@@ -99,6 +71,8 @@ def test_records_list_ownership(
         ],
         [
             'test_records_list_display_multiple_comments.yml',
+            'admin',  # username
+            ['2021-05-16 11:00'],  # expected_when_data
             ['-'],  # expected_meterings_data
             ['-'],  # expected_meal_data
             ['-'],  # expected_injections_data
@@ -106,6 +80,8 @@ def test_records_list_ownership(
         ],
         [
             'test_records_list_display_long_comment.yml',
+            'admin',  # username
+            ['2021-05-16 11:00'],  # expected_when_data
             ['-'],  # expected_meterings_data
             ['-'],  # expected_meal_data
             ['-'],  # expected_injections_data
@@ -113,19 +89,20 @@ def test_records_list_ownership(
         ],
     ],
 )
-@pytest.mark.parametrize('db_data_base_dir', [pathlib.Path('sugar', 'db_data', 'test_record_admin')])  # todo: use pytestmark?
 def test_records_list_display(
         create_client,
         db_data,
+        username,
+        expected_when_data,
         expected_meterings_data,
         expected_meal_data,
         expected_injections_data,
         expected_comments_data,
 ):
-    admin = User.objects.get(username='admin')
+    user = User.objects.get(username=username)
 
     client = create_client(
-        authenticated_with=admin,
+        authenticated_with=user,
     )
     response = client.get('/admin/sugar/record/')
     assert response.status_code == 200
@@ -136,6 +113,7 @@ def test_records_list_display(
         parser=etree_html_parser,
     )
 
+    when_search = '//table[@id="result_list"]/tbody/tr/th/a/text()'
     search_template = '//table[@id="result_list"]/tbody/tr/td[@class="{}"]/text()'  # noqa
 
     meterings_search = search_template.format('field-sugar_level')
@@ -143,8 +121,9 @@ def test_records_list_display(
     injections_search = search_template.format('field-injections_info')
     comments_search = search_template.format('field-short_comments')
 
-    assert tree.xpath(meterings_search) == expected_meterings_data 
-    assert tree.xpath(meal_search) == expected_meal_data 
+    assert tree.xpath(when_search) == expected_when_data
+    assert tree.xpath(meterings_search) == expected_meterings_data
+    assert tree.xpath(meal_search) == expected_meal_data
     assert tree.xpath(injections_search) == expected_injections_data 
     assert tree.xpath(comments_search) == expected_comments_data 
 
@@ -299,7 +278,6 @@ def test_records_list_display(
         # endregion
     ],
 )
-@pytest.mark.parametrize('db_data_base_dir', [pathlib.Path('sugar', 'db_data', 'test_record_admin')])  # todo: use pytestmark?
 def test_add_or_change_display(
         create_client,
         db_data,
@@ -501,22 +479,3 @@ def test_add_or_change_display(
         '/text()'
     )
     assert list(map(str.strip, comment)) == expected_comments_data
-
-# todo: move
-# def test_multiple_meterings(
-#         create_datetime,
-#         create_record,
-#         create_sugar_metering,
-#         db_data_base_dir,
-# ):
-#     record = create_record()
-#     create_sugar_metering(
-#         record=record,
-#         sugar_level=Decimal('4.8'),
-#     )
-#
-#     with pytest.raises(IntegrityError):
-#         create_sugar_metering(
-#             record=record,
-#             sugar_level=Decimal('6.8'),
-#         )

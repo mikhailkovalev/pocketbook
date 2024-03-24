@@ -1,0 +1,28 @@
+# region users
+- model: auth.User
+  id: 100
+  username: admin
+  is_staff: true
+  is_superuser: true
+# endregion
+# region packs
+- model: sugar.TestStripPack
+  id: 200
+  whose_id: 100
+  volume: 50
+  opening: "2021-04-01"
+  expiry_plan: "2021-05-01"
+  expiry_actual: "2021-05-01"
+# endregion
+# region records
+- model: sugar.Record
+  id: 500
+  who_id: 100
+  when: "2021-05-16T11:00:00"
+# endregion
+# region sugar_metering
+- model: sugar.SugarMetering
+  record_id: 500
+  pack_id: 200
+  sugar_level: "4.8"
+# endregion
