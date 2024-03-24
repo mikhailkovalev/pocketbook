@@ -33,12 +33,11 @@ def with_server_timezone(
         value: datetime,
 ) -> datetime:
     if settings.USE_TZ:
-        using_timezone = timezone(
-            settings.TIME_ZONE,
-        )
-        value = value.astimezone(
-            using_timezone,
-        )
+        using_timezone = timezone(settings.TIME_ZONE)
+        if value.tzinfo is None:
+            value = using_timezone.localize(value)
+        else:
+            value = value.astimezone(using_timezone)
     else:
         value = copy(value)
     return value

@@ -8,10 +8,12 @@ from typing import (
 from django.db import (
     models,
 )
+from django.utils import timezone
 
 from core.helpers import (
     NumericSum,
     get_date_display,
+    with_server_timezone,
 )
 
 
@@ -286,7 +288,7 @@ class AbstractMedication(models.Model):
     @classmethod
     def get_actual_items(cls, on_date: Optional[datetime]) -> models.QuerySet:
         if on_date is None:
-            on_date = datetime.now()
+            on_date = with_server_timezone(timezone.now()).date()
 
         result = cls.objects.filter(
             models.Q(

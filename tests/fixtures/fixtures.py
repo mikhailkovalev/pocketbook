@@ -1,3 +1,4 @@
+import contextlib
 import itertools
 import logging
 import os.path
@@ -16,7 +17,9 @@ from typing import (
     Optional,
     TYPE_CHECKING,
 )
+from unittest import mock
 
+import freezegun
 import pytest
 import pytz
 import yaml
@@ -171,3 +174,19 @@ def db_data(transactional_db, db_data_raw: Optional[List[Dict[str, Any]]], db_da
         model_name = obj_raw.pop('model')
         constructor = db_data_constructors.get(model_name, apps.get_model(model_name).objects.create)
         constructor(**obj_raw)
+
+
+@pytest.fixture
+def frozen_time() -> Optional[str]:
+    return None
+
+
+@pytest.fixture
+def freeze_time(frozen_time):
+    if frozen_time is None:
+        context_manager = contextlib.nullcontext()
+    else:
+        context_manager = freezegun.freeze_time(frozen_time)
+
+    with context_manager as frozen_time_:
+        yield frozen_time_

@@ -152,6 +152,7 @@ def test_records_list_display(
 @pytest.mark.parametrize(
     [
         'db_data_filename',
+        'frozen_time',
         'display_type',
         'expected_date_data',
         'expected_time_data',
@@ -166,85 +167,90 @@ def test_records_list_display(
         'expected_comments_data',
     ],
     [
-        # # region display_type='change'
-        # [
-        #     'test_change_display_basic.yml',  # db_data_filename
-        #     'change',  # display_type
-        #     ['2021-05-16'],  # expected_date_data
-        #     ['11:00:00'],  # expected_time_data
-        #     ['Пачка тест-полосок от 2021-05-05', '---------'],  # expected_pack_data
-        #     ['---------', 'Пачка тест-полосок от 2021-05-05', 'Пачка тест-полосок от 2021-05-06'] * 2,  # expected_pack_options
-        #     ['4.8'],  # expected_meterings_data
-        #     ['2.0'],  # expected_meal_data
-        #     ['Foo'],  # expected_meal_description_data
-        #     # region expected_syringes_data
-        #     [
-        #         'Шприц "Aspart" (300 ед.) от 2021-05-07',
-        #         '---------',
-        #         '---------',
-        #     ],
-        #     # endregion
-        #     ['---------', 'Шприц "Aspart" (300 ед.) от 2021-05-07'] * 3,  # expected_syringes_options
-        #     ['4'],  # expected_injections_data
-        #     ['Bar', '', ''],  # expected_comments_data
-        # ],
-        # [
-        #     'test_change_display_multiple_meals.yml',  # db_data_filename
-        #     'change',  # display_type
-        #     ['2021-05-16'],  # expected_date_data
-        #     ['11:00:00'],  # expected_time_data
-        #     ['---------', '---------'],  # expected_pack_data
-        #     ['---------'] * 2,  # expected_pack_options
-        #     [],  # expected_meterings_data
-        #     ['2.0', '3.0'],  # expected_meal_data
-        #     ['Foo', 'Bar'],  # expected_meal_description_data
-        #     ['---------', '---------'],  # expected_syringes_data
-        #     ['---------', '---------'],  # expected_syringes_options
-        #     [],  # expected_injections_data
-        #     ['', ''],  # expected_comments_data
-        # ],
-        # [
-        #     'test_change_display_multiple_injections.yml',  # db_data_filename
-        #     'change',  # display_type
-        #     ['2021-05-16'],  # expected_date_data
-        #     ['11:00:00'],  # expected_time_data
-        #     ['---------', '---------'],  # expected_pack_data
-        #     ['---------'] * 2,  # expected_pack_options
-        #     [],  # expected_meterings_data
-        #     [],  # expected_meal_data
-        #     [],  # expected_meal_description_data
-        #     # region expected_syringes_data
-        #     [
-        #         'Шприц "Foo" (300 ед.) от 2021-05-01',
-        #         'Шприц "Foo" (300 ед.) от 2021-05-01',
-        #         'Шприц "Bar" (300 ед.) от 2021-05-02',
-        #         '---------',
-        #         '---------',
-        #     ],
-        #     # endregion
-        #     ['---------', 'Шприц "Foo" (300 ед.) от 2021-05-01', 'Шприц "Bar" (300 ед.) от 2021-05-02'] * 5,  # expected_syringes_options
-        #     ['4', '4', '10'],  # expected_injections_data
-        #     ['', ''],  # expected_comments_data
-        # ],
-        # [
-        #     'test_change_display_multiple_comments.yml',  # db_data_filename
-        #     'change',  # display_type
-        #     ['2021-05-16'],  # expected_date_data
-        #     ['11:00:00'],  # expected_time_data
-        #     ['---------', '---------'],  # expected_pack_data
-        #     ['---------'] * 2,  # expected_pack_options
-        #     [],  # expected_meterings_data
-        #     [],  # expected_meal_data
-        #     [],  # expected_meal_description_data
-        #     ['---------', '---------'],  # expected_syringes_data
-        #     ['---------', '---------'],  # expected_syringes_options
-        #     [],  # expected_injections_data
-        #     ['Foo', 'Bar', '', ''],  # expected_comments_data
-        # ],
-        # # endregion
+        # region display_type='change'
+        [
+            'test_change_display_basic.yml',  # db_data_filename
+            None,  # frozen_time
+            'change',  # display_type
+            ['2021-05-16'],  # expected_date_data
+            ['11:00:00'],  # expected_time_data
+            ['Пачка тест-полосок от 2021-05-05', '---------'],  # expected_pack_data
+            ['---------', 'Пачка тест-полосок от 2021-05-05', 'Пачка тест-полосок от 2021-05-06'] * 2,  # expected_pack_options
+            ['4.8'],  # expected_meterings_data
+            ['2.0'],  # expected_meal_data
+            ['Foo'],  # expected_meal_description_data
+            # region expected_syringes_data
+            [
+                'Шприц "Aspart" (300 ед.) от 2021-05-07',
+                '---------',
+                '---------',
+            ],
+            # endregion
+            ['---------', 'Шприц "Aspart" (300 ед.) от 2021-05-07'] * 3,  # expected_syringes_options
+            ['4'],  # expected_injections_data
+            ['Bar', '', ''],  # expected_comments_data
+        ],
+        [
+            'test_change_display_multiple_meals.yml',  # db_data_filename
+            None,  # frozen_time
+            'change',  # display_type
+            ['2021-05-16'],  # expected_date_data
+            ['11:00:00'],  # expected_time_data
+            ['---------', '---------'],  # expected_pack_data
+            ['---------'] * 2,  # expected_pack_options
+            [],  # expected_meterings_data
+            ['2.0', '3.0'],  # expected_meal_data
+            ['Foo', 'Bar'],  # expected_meal_description_data
+            ['---------', '---------'],  # expected_syringes_data
+            ['---------', '---------'],  # expected_syringes_options
+            [],  # expected_injections_data
+            ['', ''],  # expected_comments_data
+        ],
+        [
+            'test_change_display_multiple_injections.yml',  # db_data_filename
+            None,  # frozen_time
+            'change',  # display_type
+            ['2021-05-16'],  # expected_date_data
+            ['11:00:00'],  # expected_time_data
+            ['---------', '---------'],  # expected_pack_data
+            ['---------'] * 2,  # expected_pack_options
+            [],  # expected_meterings_data
+            [],  # expected_meal_data
+            [],  # expected_meal_description_data
+            # region expected_syringes_data
+            [
+                'Шприц "Foo" (300 ед.) от 2021-05-01',
+                'Шприц "Foo" (300 ед.) от 2021-05-01',
+                'Шприц "Bar" (300 ед.) от 2021-05-02',
+                '---------',
+                '---------',
+            ],
+            # endregion
+            ['---------', 'Шприц "Foo" (300 ед.) от 2021-05-01', 'Шприц "Bar" (300 ед.) от 2021-05-02'] * 5,  # expected_syringes_options
+            ['4', '4', '10'],  # expected_injections_data
+            ['', ''],  # expected_comments_data
+        ],
+        [
+            'test_change_display_multiple_comments.yml',  # db_data_filename
+            None,  # frozen_time
+            'change',  # display_type
+            ['2021-05-16'],  # expected_date_data
+            ['11:00:00'],  # expected_time_data
+            ['---------', '---------'],  # expected_pack_data
+            ['---------'] * 2,  # expected_pack_options
+            [],  # expected_meterings_data
+            [],  # expected_meal_data
+            [],  # expected_meal_description_data
+            ['---------', '---------'],  # expected_syringes_data
+            ['---------', '---------'],  # expected_syringes_options
+            [],  # expected_injections_data
+            ['Foo', 'Bar', '', ''],  # expected_comments_data
+        ],
+        # endregion
         # region display_type='add'
         [
             'test_add_display_basic.yml',  # db_data_filename
+            None,  # frozen_time
             'add',  # display_type
             [],  # expected_date_data
             [],  # expected_time_data
@@ -258,6 +264,38 @@ def test_records_list_display(
             [],  # expected_injections_data
             ['', ''],  # expected_comments_data
         ],
+        [
+            'test_add_display_medication_options_actuality.yml',  # db_data_filename
+            '2023-03-24T23:59:59.000+03:00',  # frozen_time
+            'add',  # display_type
+            [],  # expected_date_data
+            [],  # expected_time_data
+            ['---------', '---------'],  # expected_pack_data
+            ['---------', 'Пачка тест-полосок от 2021-05-01', 'Пачка тест-полосок от 2023-03-16'] * 2,  # expected_pack_options
+            [],  # expected_meterings_data
+            [],  # expected_meal_data
+            [],  # expected_meal_description_data
+            ['---------', '---------'],  # expected_syringes_data
+            ['---------', 'Шприц "Aspart" (300 ед.) от 2021-05-01', 'Шприц "Aspart" (300 ед.) от 2023-03-09'] * 2,  # expected_syringes_options
+            [],  # expected_injections_data
+            ['', ''],  # expected_comments_data
+        ],
+        [
+            'test_add_display_medication_options_actuality.yml',  # db_data_filename
+            '2023-03-25T00:00:00.000+03:00',  # frozen_time
+            'add',  # display_type
+            [],  # expected_date_data
+            [],  # expected_time_data
+            ['---------', '---------'],  # expected_pack_data
+            ['---------', 'Пачка тест-полосок от 2021-05-01'] * 2,  # expected_pack_options
+            [],  # expected_meterings_data
+            [],  # expected_meal_data
+            [],  # expected_meal_description_data
+            ['---------', '---------'],  # expected_syringes_data
+            ['---------', 'Шприц "Aspart" (300 ед.) от 2021-05-01'] * 2,  # expected_syringes_options
+            [],  # expected_injections_data
+            ['', ''],  # expected_comments_data
+        ],
         # endregion
     ],
 )
@@ -265,6 +303,7 @@ def test_records_list_display(
 def test_add_or_change_display(
         create_client,
         db_data,
+        freeze_time,
         display_type,
         expected_date_data,
         expected_time_data,
@@ -481,136 +520,3 @@ def test_add_or_change_display(
 #             record=record,
 #             sugar_level=Decimal('6.8'),
 #         )
-
-
-def test_actuality_for_new(
-        create_client,
-        create_insulin_syringe,
-        create_test_strip_pack,
-        admin,
-        tz,
-        db_data_base_dir,
-):
-    create_test_strip_pack(  # expired pack
-        whose=admin,
-        volume=50,
-        opening=date(
-            year=2021,
-            month=4,
-            day=1,
-        ),
-        expiry_plan=date(
-            year=2021,
-            month=5,
-            day=1,
-        ),
-        expiry_actual=date(
-            year=2021,
-            month=4,
-            day=30,
-        ),
-    )
-    create_test_strip_pack(  # actual pack
-        whose=admin,
-        volume=50,
-        opening=date(
-            year=2021,
-            month=5,
-            day=1,
-        ),
-        expiry_plan=date(
-            year=2021,
-            month=6,
-            day=1,
-        ),
-    )
-
-    today = tz.localize(datetime.now()).date()
-    create_test_strip_pack(  # actual pack
-        whose=admin,
-        volume=50,
-        opening=date(
-            year=2021,
-            month=5,
-            day=10,
-        ),
-        expiry_plan=date(
-            year=2021,
-            month=6,
-            day=10,
-        ),
-        expiry_actual=today,
-    )
-    create_insulin_syringe(  # expired syringe
-        whose=admin,
-        volume=300,
-        opening=date(
-            year=2021,
-            month=4,
-            day=1,
-        ),
-        expiry_plan=date(
-            year=2021,
-            month=5,
-            day=1,
-        ),
-        expiry_actual=date(
-            year=2021,
-            month=4,
-            day=30,
-        ),
-    )
-    create_insulin_syringe(  # actual syringe
-        whose=admin,
-        volume=300,
-        opening=date(
-            year=2021,
-            month=5,
-            day=1,
-        ),
-        expiry_plan=date(
-            year=2021,
-            month=6,
-            day=1,
-        ),
-    )
-    create_insulin_syringe(  # actual syringe
-        whose=admin,
-        volume=300,
-        opening=date(
-            year=2021,
-            month=5,
-            day=10,
-        ),
-        expiry_plan=date(
-            year=2021,
-            month=6,
-            day=1,
-        ),
-        expiry_date=today,
-    )
-
-    client = create_client(
-        authenticated_with=admin,
-    )
-
-    response = client.get('/admin/sugar/record/add/')
-    assert response.status_code == 200
-    
-    etree_html_parser = etree.HTMLParser()
-    tree = etree.XML(
-        text=response.content.decode('utf-8'),
-        parser=etree_html_parser,
-    )
-
-    select_pack_search = '//select[@name="sugarmetering-0-pack"]/option/text()'
-    assert tree.xpath(select_pack_search)[1:] == [
-        'Пачка тест-полосок от 2021-05-01',
-        'Пачка тест-полосок от 2021-05-10',
-    ]
-
-    select_syringe_search = '//select[@name="insulininjection_set-0-insulin_syringe"]/option/text()'  # noqa
-    assert tree.xpath(select_syringe_search)[1:] == [
-        'Шприц "Aspart" (300 ед.) от 2021-05-01',
-        'Шприц "Aspart" (300 ед.) от 2021-05-10',
-    ]
